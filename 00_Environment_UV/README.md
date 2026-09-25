@@ -16,11 +16,15 @@ An understanding of how uv is initialised, and manages pacakages.
 
 - **`pyproject.toml` v/s `uv.lock`:** toml store the dependency and its minimum (or exact) version. But on running `uv sync` on some other machine, it make install a newer version of some library which may not be compatiable. Hence uv uses `uv.lock`, it saves the exact version, links, commands, and the information for every dependency so that on `uv sync` that exact snap is insatleld and evrything works prefectly. 
 
-- **`uv run`:** It runs the python file using the enviroment in the current directory automatically without the user needing to define it. It also doesnt chaneg your terminal' shell state unlike thye old venv commands. Most important, if it finds any discrepancies within the dependencies then it automatically syncs them using `uv sync`.
+- **`uv run`:** It runs the python file using the enviroment in the current directory automatically without the user needing to define it. It also doesnt chaneg your terminal' shell state unlike thye old venv commands. Most important, if it finds any discrepancies within the dependencies then it automatically syncs them using `uv sync`. It also gives the error output fantastically, very neatly organized.**
+
+- **`uv remove`:** As the name suggests it remove any installed dependency. It automatically edits the `uv.lock` and `pyproject.tomal` with the appropriate information.
+
+- **`uv sync`:** It sync the `/.venv` with `uv.lock`. Useful in multiple people working on same software. 
 
 ## What I struggled with
 For now none.
 
 ## Open questions / revisit later
-For now none.
+- `uv lock` I still dont understand it.
 
