@@ -7,7 +7,7 @@
 3. Under standing merging, the different  conflicts which can arise, methods to resolve these conflicts and some advanced git. 
 
 ## What I built
-Nothing yet.
+- **`process_todos.py`:** It takes the users and todos from `users.json`, `todos.js`respectively and aggregates the todo which each user has and displays it. It also gives you the option to add a new todo.
 
 ## What actually clicked
 - **`json.load()`:** If you have a json file (or something from which you can read json from, it should not be a python string) then you can use this `json.load(``obj``)` to load the json from it as a list of dictionaries into python. For example:
