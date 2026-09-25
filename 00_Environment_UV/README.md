@@ -1,4 +1,4 @@
-# Milestone 0X: <name>
+# Milestone 00: Environment & Tooling (uv)
 
 ## Goal
 - Learing uv, how to use it. What it actually does under the hood and how it is more efficent than venv
