@@ -51,7 +51,7 @@ An understanding of how uv is initialised, and manages pacakages.
     ```
 
 ## What I struggled with
-- `uv lock`, didnt understnad why it existed and was used for eactly.
+- `uv lock`, didnt understnad why it existed and was used for eactly. But now I do understand it as one simply creates the required blueprint while the other creates as well as applies that blueprint.
 
 
 ## Open questions / revisit later

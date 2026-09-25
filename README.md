@@ -14,7 +14,7 @@ with one real "build" — not a toy example.
 | # | Milestone | Status | Started | Finished |
 |---|-----------|--------|---------|----------|
 | 00 | Environment & Tooling (uv) | ✅ Done | | |
-| 01 | JSON, Virtual Environments, Git Merge Conflicts | 🔲 Not started | | |
+| 01 | JSON, Virtual Environments, Git Merge Conflicts | 🟡 In progress | | |
 | 02 | APIs & HTTP (requests, status codes, auth) | 🔲 Not started | | |
 | 03 | FastAPI + SQLAlchemy Backend (fix circular imports) | 🔲 Not started | | |
 | 04 | Frontend Basics + Deployment | 🔲 Not started | | |
