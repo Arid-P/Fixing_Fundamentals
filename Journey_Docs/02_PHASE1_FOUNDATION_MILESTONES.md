@@ -83,12 +83,12 @@ Be specific (code lines, error messages, dates). Detail standard is in `06` §4.
 - Bonus later: TickTick backup exports as **CSV** (Settings → Backup & Import → Create Backup on the web app), a good CSV→JSON exercise.
 
 ### Atoms — JSON
-- [ ] M01.01 JSON syntax rules: double quotes only, no trailing commas, six value types (object, array, string, number, `true/false`, `null`).
-- [ ] M01.02 JSON is *text*; a Python dict is an in-memory object. Map: `true/false/null` ↔ `True/False/None`; JSON keys are always strings.
-- [ ] M01.03 `json.load(f)` (file → object) vs `json.loads(s)` (string → object).
-- [ ] M01.04 `json.dump(obj, f, indent=2)` (object → file) vs `json.dumps(obj)` (object → string).
-- [ ] M01.05 Always `with open(path, encoding="utf-8")`.
-- [ ] M01.06 Nested access: `data[0]["address"]["geo"]["lat"]`; mixed list/dict paths.
+- [x] M01.01 JSON syntax rules: double quotes only, no trailing commas, six value types (object, array, string, number, `true/false`, `null`).
+- [x] M01.02 JSON is *text*; a Python dict is an in-memory object. Map: `true/false/null` ↔ `True/False/None`; JSON keys are always strings.
+- [x] M01.03 `json.load(f)` (file → object) vs `json.loads(s)` (string → object).
+- [x] M01.04 `json.dump(obj, f, indent=2)` (object → file) vs `json.dumps(obj)` (object → string).
+- [x] M01.05 Always `with open(path, encoding="utf-8")`.
+- [x] M01.06 Nested access: `data[0]["address"]["geo"]["lat"]`; mixed list/dict paths.
 - [ ] M01.07 Safe access: `.get(key, default)`, catching `KeyError`/`TypeError`, checking types.
 - [ ] M01.08 Filter, sort and group lists of objects: comprehensions, `sorted(key=...)`, `collections.Counter`, `defaultdict`.
 - [ ] M01.09 Read-modify-write: never `json.dump` across separate runs blindly; write to a temp file then `os.replace`; keep a backup.

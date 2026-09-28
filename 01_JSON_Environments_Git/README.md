@@ -10,14 +10,14 @@
 - **`process_todos.py`:** It takes the users and todos from `users.json`, `todos.js`respectively and aggregates the todo which each user has and displays it. It also gives you the option to add a new todo.
 
 ## What actually clicked
-- **`json.load()`:** If you have a json file (or something from which you can read json from, it should not be a python string) then you can use this `json.load(``obj``)` to load the json from it as a list of dictionaries into python. For example:
+- **`json.load()`:** If you have a json file (or something from which you can read json from, it should not be a python string) then you can use this `json.load(obj)` to load the json from it as a list of dictionaries into python. For example:
     ```python
     with open('<file_paht>/<file_name>.json', 'r') as json_fh:
         users = json.load(json_fh) #file hndlder
     ```
 
 
-- **`json.load_s_()`:** Just `json.load` but for python strings. For example:
+- **`json.load_s_()`:** Just `json.load` but for python strings. The keys must be in double quotes and the whole expression in single quote. For example:
     ```python
     raw_json_str = '{"name": "Ari", "milestone": 1}'
     data = json.loads(raw_json_str)
