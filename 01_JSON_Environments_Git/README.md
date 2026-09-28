@@ -60,7 +60,23 @@
 
 - **Filter, Sort & Group:** Use `sorted(iterable, key)` function, `collections.Counters(iterable)` and `collections.defaultdict(<default_data_type>)` methods for grouping. `filter()` function for filtering. You can use other common iterable techniqes.
 
-- **`json.load()`:**
+- **Good Practice for Failure** Sometimes while dumping data into a file with `'w'`, the process could become corrupted, or may the connection to the server fail, in such a such situation now you have a file with either no data or no data at all. Hence to prevent this we follow:
+        1. *Backup*: Make a backup of the file to be wriiten on (`data.json.bak`)
+        2. *Write to Temp*: Make a temperory file (`data.json.tmp`) and write the data on it
+        3. *Replace*: Replace the original file with the temp file. Use `os.replace(temp_file, target_file)`. 
+
+- **`json.JSONDecodeError`:** It occurs when you process a bad syntax json file, like file provided by the user, or a network, json. Then using this error, we ca figure out the *line number* using `err.lineno`, *exact column* using `err.colno`, *the message* using `err.msg` (the rule violated, it is in double quotes).
+
+- **Serialization Flags:** They are some flags we can use with `json.dump()` and `json.dumps()`. These include: 
+        - `sort_keys=True`: Sorts dictionary keys alphabetically.
+        - `ensure_ascii=False`:  By default, Python converts non-ASCII characters (emojis, Hindi, accents) into escape codes (\u20b9). Setting ensure_ascii=False writes the actual UTF-8 characters cleanly.
+        - `default=str`: It converts all the different data types present in the data to str, like if `datetime` or `Path` obj is present then it automatically converts it into a str.
+
+###Use of JSON Along with CSV
+- **``:**
+- **``:**
+- **``:**
+- **``:**
 
 
 ## What I struggled with
