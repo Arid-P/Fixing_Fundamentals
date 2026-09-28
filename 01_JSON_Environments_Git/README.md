@@ -42,11 +42,23 @@
     ```
 
 
-- **`json.load()`:**
+- **`python -m json.tool <file_path>/<file_name>`:** It is supposed to be ran in a *terminal*. It checks if all the keys within the file are proper and the values asssociated with each are also allowed ones. It automatically pretty prints the file's contents.
 
-- **`json.load()`:**
+- **Safe key access:** Use .get() and .upate() methods to get dafely get the values from the dictionary or use `try: ... except: ...` blocks. FOr example:
+    ```python
+    for user in users:
+        name = user.get('name')
+        city = (user.get('address') or {'city': 'N/A'} ).get('city')
+        #If get() returns None then the other value is used
 
-- **`json.load()`:**
+        company_name = (user.get('company') or {'name': 'Freelance'} ).get('name')
+        try: #I am not writing nested dictionary
+            latidtude = float(user['address']['geo']['lat'])
+        except (KeyError, TypeError):
+            latidtude = 0.0
+    ```
+
+- **Filter, Sort & Group:** Use `sorted(iterable, key)` function, `collections.Counters(iterable)` and `collections.defaultdict(<default_data_type>)` methods for grouping. `filter()` function for filtering. You can use other common iterable techniqes.
 
 - **`json.load()`:**
 

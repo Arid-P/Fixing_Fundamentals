@@ -1,4 +1,4 @@
-from json import load, dump
+from json import load
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
