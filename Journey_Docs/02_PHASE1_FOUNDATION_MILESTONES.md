@@ -89,12 +89,12 @@ Be specific (code lines, error messages, dates). Detail standard is in `06` §4.
 - [x] M01.04 `json.dump(obj, f, indent=2)` (object → file) vs `json.dumps(obj)` (object → string).
 - [x] M01.05 Always `with open(path, encoding="utf-8")`.
 - [x] M01.06 Nested access: `data[0]["address"]["geo"]["lat"]`; mixed list/dict paths.
-- [ ] M01.07 Safe access: `.get(key, default)`, catching `KeyError`/`TypeError`, checking types.
-- [ ] M01.08 Filter, sort and group lists of objects: comprehensions, `sorted(key=...)`, `collections.Counter`, `defaultdict`.
-- [ ] M01.09 Read-modify-write: never `json.dump` across separate runs blindly; write to a temp file then `os.replace`; keep a backup.
-- [ ] M01.10 Invalid JSON: `json.JSONDecodeError` gives line/column; read the message.
-- [ ] M01.11 `sort_keys`, `ensure_ascii=False`, `default=str` for non-serializable types (e.g. `datetime`).
-- [ ] M01.12 Inspect JSON from the terminal: `python -m json.tool`, optionally `jq`.
+- [x] M01.07 Safe access: `.get(key, default)`, catching `KeyError`/`TypeError`, checking types.
+- [x] M01.08 Filter, sort and group lists of objects: comprehensions, `sorted(key=...)`, `collections.Counter`, `defaultdict`.
+- [x] M01.09 Read-modify-write: never `json.dump` across separate runs blindly; write to a temp file then `os.replace`; keep a backup.
+- [x] M01.10 Invalid JSON: `json.JSONDecodeError` gives line/column; read the message.
+- [x] M01.11 `sort_keys`, `ensure_ascii=False`, `default=str` for non-serializable types (e.g. `datetime`).
+- [x] M01.12 Inspect JSON from the terminal: `python -m json.tool`, optionally `jq`.
 - [ ] M01.13 CSV ↔ JSON with `csv.DictReader`/`DictWriter` (also a Class 12 CBSE topic).
 
 ### Atoms — Git

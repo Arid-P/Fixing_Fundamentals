@@ -72,7 +72,7 @@
         - `ensure_ascii=False`:  By default, Python converts non-ASCII characters (emojis, Hindi, accents) into escape codes (\u20b9). Setting ensure_ascii=False writes the actual UTF-8 characters cleanly.
         - `default=str`: It converts all the different data types present in the data to str, like if `datetime` or `Path` obj is present then it automatically converts it into a str.
 
-###Use of JSON Along with CSV
+_***Use of JSON Along with CSV***_
 - **``:**
 - **``:**
 - **``:**
