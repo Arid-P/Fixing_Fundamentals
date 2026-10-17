@@ -73,11 +73,24 @@
         - `default=str`: It converts all the different data types present in the data to str, like if `datetime` or `Path` obj is present then it automatically converts it into a str.
 
 _***Use of JSON Along with CSV***_
-- **``:**
-- **``:**
-- **``:**
-- **``:**
+- **`csv.DictReader(<file>)`:** It reads the content of a csv file. It returns a *csv object* so converting to a list using `list()` is important. For example
 
+- **`csv.DictWriter(<file>, fieldnames=<List of the keys, newline='', encoding='utf-8')`:** It writes content to a csv file. It is __*done in 3 parts*__. It is best practice to provide `newline=''` and `encoding='utf-8`. 
+    A common example for both is given below:
+    ```python
+    import csv
+
+    # Reading CSV into a list of dicts:
+    with open("data.csv", "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)  # list of dicts!
+
+    # Writing list of dicts to CSV:
+    with open("data.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["id", "name", "city"])
+        writer.writeheader()
+        writer.writerows(rows)
+    ```
 
 ## What I struggled with
 - json.dumps. Now it is ok.
