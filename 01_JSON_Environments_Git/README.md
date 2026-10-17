@@ -10,6 +10,8 @@
 - **`process_todos.py`:** It takes the users and todos from `users.json`, `todos.js`respectively and aggregates the todo which each user has and displays it. It also gives you the option to add a new todo.
 
 ## What actually clicked
+### 1. JSON
+
 - **`json.load()`:** If you have a json file (or something from which you can read json from, it should not be a python string) then you can use this `json.load(obj)` to load the json from it as a list of dictionaries into python. For example:
     ```python
     with open('<file_paht>/<file_name>.json', 'r') as json_fh:
@@ -91,6 +93,32 @@ _***Use of JSON Along with CSV***_
         writer.writeheader()
         writer.writerows(rows)
     ```
+
+## 2. GIT
+
+- **`git fetch`:** It downloads all the new commits, branches, and tags into your local .git repo from the remote server. They are download in a separate branch (e.g., origin/main). *No working File is Ever Touched*. 
+
+- **`git pull`:** It is `git fetch` and `git merge` at once, i.e., it downloads all the new elements (commits, branches, etc) from the remote servers in a separate brnch and then merges it with the local branch(es).
+        $$git pull = git fetch + git merge$$
+
+- **Merge Conflict:** It occurs only if two or more users edit the same line(s). Git represents conflicts in a specific format, *HEAD* : Marks the start of your current branch's version; *==== The divided line*: The divider line. Everything above is your local version; everything below is the incoming version; *<branch_or_commit>*: Marks the end of the incoming branch's version. For example:
+    ```git
+    <<<<<<< HEAD
+    print("Welcome to Todo CLI v1.0 (local edit)")
+    =======
+    print("Welcome to Todo CLI v2.0 (incoming from remote)")
+    >>>>>>> feature-branch
+    ```
+    Decide what the code should be: keep your version, keep their version, or combine them both. Then delete all the marker lines, and stage all the edits. 
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
 
 ## What I struggled with
 - json.dumps. Now it is ok.
