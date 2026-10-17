@@ -2,7 +2,7 @@
 
 ## Goal
 
-1. What is JSON, how we read and undersytand it. 
+1. What is JSON, how we read and understand it. 
 2. How we handle JSON files, extracting data, writting data, and other operations, using python.
 3. Under standing merging, the different  conflicts which can arise, methods to resolve these conflicts and some advanced git. 
 
