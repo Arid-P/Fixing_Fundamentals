@@ -172,25 +172,21 @@ _***Use of JSON Along with CSV***_
 
 - **`git rm --cached <file-name/directory>`:** It removed a file or directory from git's tracking. `--cached` preserves that file on your disk, without it the file is deleted form boht git and disk.
 
-- **``:**
+#### Git Undo ToolKit
+- **`git restore <file>`:** It is used for a file not commited yet. It discards all the changes in your working directory and gets the file to the last commit's state. If you use `--staged` flag then it takes out the file from the staging area without losing your edits. 
 
-- **``:**
+- **`git reset --<reset-type> HEAD~<number-of-commits>`:** It tells git to move back the head by 1 commit. *NEVER USE ON COMMITS ALREADY PUSHED* The flag types are: `--soft`, the files in the staging are and the working directory remain untouched; `--mixed`, it empties the staging area but no changes to working directory; `--hard`, it wipes out the staging area as well as in the working directory.
 
-- **``:**
+- **`git revert <commit-hash>`:** It is used when you have to undo the commits already pushed. Git calculates the exact inverse of that commit and creates a brand-new commit that cancels it out. History stays strictly forward-moving; no commits are deleted.
 
-- **``:**
+- **Commit Messages:** Generally we follow the format: 
+    ```text
+    <type>(<scope>): <short imperative description>
+    ```
 
-- **``:**
+    The type includes: `feat` (new feature or capability for the user),` fix`, `refactor` (cleaning up or restructing code), `docs` (changes to the documentation, README, notes, comments, etc), `test` (adding or modifying tests), `chore` (Maintenance, dependencies, configurations (.gitignore, tooling))
 
-- **``:**
-
-- **``:**
-
-- **``:**
-
-- **``:**
-
-- **``:**
+    The scope is a noun inside parentheses identifying the module or area: `(cli), (json), (csv), (auth)`. Always write the description in the imperative present tense ("add", "fix", "update", NOT "added", "fixing", "fixed").
 
 
 ## What I struggled with
