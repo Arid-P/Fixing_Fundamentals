@@ -9,6 +9,8 @@
 ## What I built
 - **`process_todos.py`:** It takes the users and todos from `users.json`, `todos.js`respectively and aggregates the todo which each user has and displays it. It also gives you the option to add a new todo.
 
+- **`todo_tool.py`:** It manages users.json and todos.json by passing command linbe agruments upon running of the python script.
+
 ## What actually clicked
 ### 1. JSON
 
