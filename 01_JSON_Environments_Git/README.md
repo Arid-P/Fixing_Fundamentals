@@ -113,7 +113,9 @@ _***Use of JSON Along with CSV***_
     ```
     Decide what the code should be: keep your version, keep their version, or combine them both. Then delete all the marker lines, and stage all the edits. 
 
-- **``:**
+- **`3 Git Areas`:** Git has 3 different areas or section where files can exist. The first is *Working Directory* it is simply the directory and its contents that you see. In it you create, edit, read, delete files. 
+    Then we have *Staging area*, here you add or stage the files to be commited. Say you edit 5 files, but want only 3 to be commit then you add those there to the stage area and commit them. We done update any file here, on running `git add`, git takes a snapahot of the working directory and saves it. "That is what "staged" means: *marked and prepared to be included in the next commit*.*". 
+    Then you have the *Repositry* or common refered to as repo. When you run `git commit`, Git seals the packing box, gives it a unique cryptographic ID (SHA hash), and stores it permanently in the `.git` directory as a snapshot. The staging area is now clean and ready for the next round.
 
 - **``:**
 
