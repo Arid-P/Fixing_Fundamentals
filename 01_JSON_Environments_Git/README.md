@@ -117,6 +117,75 @@ _***Use of JSON Along with CSV***_
     Then we have *Staging area*, here you add or stage the files to be commited. Say you edit 5 files, but want only 3 to be commit then you add those there to the stage area and commit them. We done update any file here, on running `git add`, git takes a snapahot of the working directory and saves it. "That is what "staged" means: *marked and prepared to be included in the next commit*.*". 
     Then you have the *Repositry* or common refered to as repo. When you run `git commit`, Git seals the packing box, gives it a unique cryptographic ID (SHA hash), and stores it permanently in the `.git` directory as a snapshot. The staging area is now clean and ready for the next round.
 
+- **`git switch ~-c~ <branch-name>`:** It is the new way to switch to a branch. The `-c` flag creates the branch if it doesnt already exist.
+
+- **`git branch`:** Lists all local branches, with an asterisk `*` next to the one you are currently standing on.
+
+- **`git branch -d/-D <branch-name>`:** It is used to delete a branch. The `-d` and `-D` are safe and forced flags (not exactly that but for understanding). The `-d` gives you an error message if the branch you are trying to delete hasnt been merged with your current branch or upstream, telling you that and saying to merge. While `-D` straight up deletes the branch without any messaeg or shit. 
+
+- **`Fast-Forward vs. Three-Way Merge`:** Fast forward occurs when there have been no commits after the commit you branched from, ie, the graph looks like 2 line segements with a common vertex.
+    ```text
+    Before Merge:
+    A --- B --- C (main)
+                \
+                D (temp-test)
+
+    After Fast-Forward Merge:
+    A --- B --- C --- D (main, temp-test)
+    ```
+    Three way merge occurs when the there are more commits from the commit you branched off. It is best understood by a visual:
+    ```text
+    Before Merge:
+    A --- B --- C (Common Ancestor)
+                \
+                \--- E (main)
+                \-- D (feature-banner)
+
+    After Three-Way Merge:
+    A --- B --- C ------- E ---- M (Merge Commit - 2 parents!)
+                \              /
+                \--- D ------/
+    ```
+
+- **`git remote -v`:** A "remote" is an alias stored in the `.git/config` that points to a URL. By convention, git names your primary remote __`origin`__. The `-v` stands for verbose. It shows all the configured remotes with thier alias and URL.
+
+- **`git remote add <alias> <url>`:** It adds/configures a remote with its alias and URL. Eg:
+    ```bash
+    git remote add origin https://github.com/your-username/your-repo.git
+    ```
+    In open-source work, you often have origin pointing to your fork, and you add a second remote called upstream pointing to the original author's repository
+
+- **`git push -u origin <branch>`:** The `-u` is short for `--set-upstream`. It creates a permanent tracking link between your local branch (main) and the remote branch (origin/main). Once you have set it up and want to push the changes you can simply do `git push`.  
+
+- **`git clone <url>`:** It simply clones the git repo into your system as a directory. It downloads the whole history and everything (the `.git` folder). 
+
+- **`git diff`:** It shows the un-staged changes. Simply answers the question *"What have I edited on my workbench that I haven't staged yet?"*
+
+- **`git diff --staged`:** It tells you what all will be commit in your next commit. Answering the question *"What is packed inside my staging box right now, waiting to be committed?"*
+
+- **`git diff origin/main`:** It shows all the code changes __across the commits__ you __havent pushed__ yet. Answering *"What code exists on my computer that is NOT yet on GitHub?"*
+
+- **`git log`:** It gives you the commit history in chronological order (recently first) of the branch you currently on. It has several flags: `--all`, it gives a complete view of where your local branch is relative to the remote server; `--graph`, it displays the commit history in somewhat graph manner in the command line; `--oneline`, it presents each commit with its hash and the message in a line. 
+
+- **`.gitignore`:** Inside iy you define the directories and folder that git needs to ignore. eg `*.log` tells every file ending with `.log`, `.venv/` tells Git to ignore this entire directory, `temp/*`, tells git to ignores all files inside the temp/ folder, `!keep_me.log` (An exclamation mark is a negation rule) tells git to not ignore this specific file, even if *.log matched earlier.
+    __*Note:*__ It tells git to not start tracking a file! Already tracked files have no effect on them.
+
+- **`git rm --cached <file-name/directory>`:** It removed a file or directory from git's tracking. `--cached` preserves that file on your disk, without it the file is deleted form boht git and disk.
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
+- **``:**
+
 - **``:**
 
 - **``:**
