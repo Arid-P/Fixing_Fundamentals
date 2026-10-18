@@ -48,10 +48,11 @@ from pathlib import Path
 from os import replace
 from shutil import copy
 
-from json import load, dump
+from json import load, dump, JSONDecodeError
 import argparse
 
 from icecream import ic #To debug
+ic.disable()
 
 #0. Creating the parser and subparsers to read the arguments from the command line.
 
@@ -75,18 +76,44 @@ DATA_DIR = Path(__file__).parent.parent / 'data'
 USER_DIR = DATA_DIR / 'users.json'
 TODO_PATH = DATA_DIR / 'todos.json'
 
+users, todos = [], []
 
-#2. Loading the data 
-with open(USER_DIR, 'r') as file:
-    users = load(file)
+#2. Loading the data
+def load_data () -> None:
+    global users, todos
 
-with open(TODO_PATH, 'r') as file:
-    todos = load(file)
+    try: 
+        with open(USER_DIR, 'r') as file:
+            try:
+                users = load(file)
+            except JSONDecodeError as e:
+                    print("Unable to process users.json as the json is not in proper format.")
+                    exit()
+
+        with open(TODO_PATH, 'r') as file:
+            try:
+                todos = load(file)
+            except JSONDecodeError as e:
+                    print("Unable to process todos.json as the json is not in proper format.")
+                    exit()
+        
+    except FileNotFoundError as e:
+            if 'user' in e.filename:
+                print('users.json ', end='')
+            else:
+                print('todos.json ', end='')
+    
+            print("file not found")
+            exit()
 
 
 def list_user_todo (userid: int) -> None:
     global todo
     todo_of_user = list(filter(lambda todo: todo.get('userId') == userid, todos ))
+
+    if not todo_of_user:
+        print("No todo found for the provided user.")
+        return 
 
     print(f"{'Title':^70} | {'Status':^6}|")
     print("-" *90)
@@ -156,7 +183,7 @@ def add_todo (userId: int, title: str) -> None:
     
     todo = {
         'userId' : userId,
-        'id' : max_todo_id,
+        'id' : max_todo_id+1,
         'title' : title,
         'completed' : False
     }
@@ -164,7 +191,12 @@ def add_todo (userId: int, title: str) -> None:
     todos.append(todo)
 
     write_todos_safely(todos)
+    print(f"Successfully added todo #{todo['id']}: '{title}' for user {userId}")
 
+
+
+
+load_data()
 
 if args.command == "list":
     ic("list")
