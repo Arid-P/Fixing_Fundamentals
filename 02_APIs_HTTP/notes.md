@@ -49,3 +49,86 @@
   - Believing `POST` is idempotent (running it multiple times creates duplicate resources or multiple transactions).
   - Confusing `401 Unauthorized` with `403 Forbidden` (`401` = unauthenticated/who are you?; `403` = authenticated but lack permission).
   - Thinking `204 No Content` is an error code (it is a success status that deliberately returns an empty payload body).
+
+## [Python Requests: Methods, Params, Payloads & Headers]
+
+- **The Mental Model:** The Python `requests` library abstracts the raw TCP/TLS socket into high-level Request and Response objects. Making a request produces a `Response` object `r` containing status, headers, and body.
+- **How it Works:**
+  1. **HTTP Verbs:** `requests.get()`, `requests.post()`, `requests.put()`, `requests.delete()`.
+  2. **Query Parameters (`params=`):** Pass a dictionary to `params=`. `requests` automatically URL-encodes keys/values and appends them to the URL query string (`?key=val`).
+  3. **Body Payloads (`json=` vs `data=`):**
+     - `json={"key": "val"}`: Serializes Python dict to JSON string and sets header `Content-Type: application/json`.
+     - `data={"key": "val"}`: Form-encodes data as `key=val` and sets header `Content-Type: application/x-www-form-urlencoded`. (Fails against strict JSON APIs with `422` or `400`).
+  4. **Inspecting Outgoing vs Incoming:**
+     - `r.headers`: What the server returned.
+     - `r.request.headers`: What Python sent out across the wire.
+     - `Content-Length`: Size of the payload body in raw bytes.
+  5. **Response Handling:**
+     - `r.status_code`: HTTP status as int (e.g. 200).
+     - `r.text`: Response decoded to string.
+     - `r.json()`: Parses `r.text` as JSON into Python dict/list (raises `json.JSONDecodeError` if invalid JSON).
+     - `r.raise_for_status()`: Throws `HTTPError` on 4xx/5xx, no-op on 2xx/3xx.
+- **Ari's Code:**
+  ```python
+  from requests import get, HTTPError
+
+  url = "https://jsonplaceholder.typicode.com/posts"
+  resp = get(url, params={"userId": 1})
+
+  try:
+      resp.raise_for_status()
+  except HTTPError as e:
+      print("Request failed:", e)
+      exit()
+
+  content = resp.json()
+  for post in content:
+      print(f"ID: {post['id']}, Title: {post['title']}")
+  ```
+- **Common Pitfalls:**
+  - Manually concatenating query strings into the URL instead of using `params=` (fails with spaces, unicode, or special characters).
+  - Passing a dict to `data=` when the API expects JSON (leads to `422 Unprocessable Entity`).
+  - Assuming `.json()` is safe without checking status or catching JSON decode errors.
+
+## [Network Resilience: Timeouts, Sessions, Retries & Errors]
+
+- **The Mental Model:** The network is unreliable. Connections drop, servers freeze, and Wi-Fi glitches. Defensive network programming assumes failure is normal and handles timeouts, retries, and malformed data explicitly.
+- **How it Works:**
+  1. **Timeouts:** In `requests`, default timeout is `None` (waits forever). Always set `timeout=5.0`.
+  2. **Connection Pooling (`requests.Session`):** Reuses the underlying TCP/TLS socket across requests via HTTP Keep-Alive, eliminating repeated handshakes.
+  3. **Exception Hierarchy:**
+     - `requests.ConnectionError`: DNS failure, refused connection, no internet.
+     - `requests.Timeout`: Request exceeded `timeout=` limit.
+     - `requests.HTTPError`: Server replied with 4xx or 5xx (raised by `.raise_for_status()`).
+     - `requests.JSONDecodeError`: Body was not valid JSON (e.g. HTML captive portal / 500 error page).
+  4. **Exponential Backoff:** Wait $2^{\text{attempt}}$ seconds (1s, 2s, 4s...) between retries to avoid overwhelming struggling servers.
+  5. **Selective Retrying:**
+     - Retry transient network errors (`ConnectionError`, `Timeout`) and transient server limits (`429`, `503`).
+     - Never retry permanent client errors (`401 Unauthorized`, `404 Not Found`) or syntax errors.
+     - Never wait on the final attempt before raising.
+- **Ari's Code:**
+  ```python
+  def fetch_json(url: str, params: dict | None = None, max_retries: int = 3, timeout: float = 5.0):
+      session = requests.Session()
+      for retry in range(max_retries):
+          try:
+              resp = session.get(url, timeout=timeout, params=params)
+              resp.raise_for_status()
+              return resp.json()
+          except (requests.ConnectionError, requests.Timeout):
+              if retry == max_retries - 1:
+                  raise
+              wait(retry)
+          except requests.HTTPError:
+              if resp.status_code in [429, 503]:
+                  if retry == max_retries - 1:
+                      raise
+                  wait(retry)
+              else:
+                  raise
+  ```
+- **Common Pitfalls:**
+  - Omitting `timeout` (causes program to hang indefinitely).
+  - Assuming HTTP `200 OK` guarantees valid JSON data (captive portals return 200 with HTML).
+  - Retrying `404` or `401` errors (they will never succeed without fixing URL or auth).
+  - Sleeping on the final attempt before raising an error.

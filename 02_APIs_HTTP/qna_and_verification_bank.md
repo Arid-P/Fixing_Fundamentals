@@ -72,3 +72,63 @@ This bank records all atomic verification statements, learner verbatim responses
 - **Statement 6R:** If an HTTP client sends a POST request containing headers and a JSON body, the server identifies where the headers stop and where the JSON payload begins by scanning for an empty line (`\r\n\r\n`).
 - **Learner Response (Verbatim):** `6R t, dont start 3`
 - **Evaluation:** Correct. M02.03 fully cleared.
+
+---
+
+## Checkpoint M2-3 Verification (Requests Basics, Params, Payloads & Headers)
+**Date:** 2026-11-05
+
+### Statements
+1. Calling `requests.get(url, params={"city": "New York"})` automatically URL-encodes the space in the parameter value.
+2. When calling `requests.post(url, json={"name": "Ari"})`, the `requests` library automatically injects the outgoing header `Content-Type: application/json`.
+3. If a server returns an HTTP 500 error with an HTML error page, calling `r.json()` suppresses the error and safely returns an empty dictionary `{}`.
+4. The method `r.raise_for_status()` raises an `HTTPError` exception if the response status code is `201 Created`.
+5. In Python `requests`, `r.headers` displays the headers sent out by your Python client, whereas `r.request.headers` displays the headers received from the server.
+6. Passing a Python dictionary to `data=` in `requests.post()` sends form-encoded data (`application/x-www-form-urlencoded`) rather than JSON.
+7. The `Content-Length` header indicates the total number of characters in the URL path.
+
+### Learner Response (Verbatim)
+`t, t, f, f, f, t, f (payload body length)`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: True | Key: True)
+- **Statement 2:** Correct (Answered: True | Key: True)
+- **Statement 3:** Correct (Answered: False | Key: False — raises JSONDecodeError, does not return empty dict)
+- **Statement 4:** Correct (Answered: False | Key: False — 201 is success, does not raise)
+- **Statement 5:** Correct (Answered: False | Key: False — r.headers is received, r.request.headers is sent)
+- **Statement 6:** Correct (Answered: True | Key: True)
+- **Statement 7:** Correct (Answered: False (payload body length) | Key: False — size of body in bytes)
+
+**Score:** 7 / 7 Correct.
+- **Atoms cleared:** M02.07 (part 1), M02.08, M02.09, M02.10.
+
+---
+
+## Checkpoint M2-4 Verification (Network Resilience, Timeouts, Sessions, Retries & Errors)
+**Date:** 2026-11-06
+
+### Statements
+1. By default, calling `requests.get("https://example.com")` without specifying `timeout` will raise a `Timeout` exception after 30 seconds if the remote server fails to respond.
+2. Using `requests.Session()` reuses the underlying TCP/TLS connection across multiple requests to the same host via HTTP Keep-Alive.
+3. A `requests.ConnectionError` is raised whenever a remote web server successfully returns an HTTP `500 Internal Server Error`.
+4. An HTTP `404 Not Found` error should always be retried with exponential backoff because the missing resource typically appears on subsequent attempts.
+5. An HTTP response with status code `200 OK` guarantees that the response body contains valid JSON that can be safely parsed by `.json()`.
+6. In an exponential backoff strategy, the sleep duration between failed attempts increases exponentially (e.g. 1s, 2s, 4s) to prevent hammering an overloaded server.
+7. Calling `r.raise_for_status()` on a response with status code `429 Too Many Requests` raises a `requests.HTTPError`.
+
+### Learner Response (Verbatim)
+`dl+1. Dontn we need to close the session like a sql session?`
+`f, t, f, f, f, t, t`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: False | Key: False — default timeout is None, hangs indefinitely)
+- **Statement 2:** Correct (Answered: True | Key: True)
+- **Statement 3:** Correct (Answered: False | Key: False — 500 raises HTTPError, ConnectionError is network-level)
+- **Statement 4:** Correct (Answered: False | Key: False — 404 is non-transient client error)
+- **Statement 5:** Correct (Answered: False | Key: False — 200 can return HTML or text)
+- **Statement 6:** Correct (Answered: True | Key: True)
+- **Statement 7:** Correct (Answered: True | Key: True)
+
+**Score:** 7 / 7 Correct.
+- **Atoms cleared:** M02.11, M02.12.
+- **Deliverable verified:** `src/02_apis_http/build/fetcher_core.py` built by learner with real exponential backoff terminal proof.
