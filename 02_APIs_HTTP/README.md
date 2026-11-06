@@ -190,7 +190,7 @@ What api is. HTTP v/s HTTPS, a scoket,
     *OpenAPI Specifications (OAS):* It is a standardized and machine-readable format (JSON or YAML) that formally defines an entire API. Its available paths, the format of the payload in any request, response status code, etc.  
     *Swagger:* It is a toolset build around OAS. It has various part, the most famous is Swagger UI. It is like the `/docs` in FastAPI. It is an interactive HTML documentation page automatically generated from that OpenAPI spec.
 
-- **Open-Meteo API:**  We will be using this api for practice. On the page (https://open-meteo.com/en/docs#api_documentation) the api end point is `v1/forecast`, which makes the URL, `https://api.open-meteo.com/v1/forecast` to be used in get. 
+- **Open-Meteo API:** We will be using this api for practice. On the page (https://open-meteo.com/en/docs#api_documentation) the api end point is `v1/forecast`, which makes the URL, `https://api.open-meteo.com/v1/forecast` to be used in get. 
     Its parameters include:
         - `latidue` & `latitude`: These are required parameters, and should be floats.
         - Metrics like `current`, in which we define variables whose current condition should be returned; `hourly`, variables whose hourly condition should be returned; `daily`, variables whose daily condition should be returned. These are string array. They can be common separated or use multiple `&hourly=` elements.
@@ -215,9 +215,21 @@ What api is. HTTP v/s HTTPS, a scoket,
     }
     ```
 
-- **Header:** 
+- **Pagination:** APIs cannot return millions of records in a single response payload (that would blow up memory and network bandwidth). Instead, they send data in chunks or pages. So we utilize the tehnique pagination to load the data in chunks. It is done in 2 main ways:
+    1. Offset / Limit (Page & Limit)
+    2. Cursor-Based Pagination
 
-- **Header:** 
+- **Offset / Limit (Page & Limit):** In it we provide 2 query params: `limit` (the number of elements in the payload), `offset` (the number of records to skip before picking the `limit` numbers of records).   
+    E.g., offset=0 for page 1, offset=20 for page 2, offset=40 for page 3.  
+    It is most often used in SQL databases or in our example, [PokeAPI](#pokeapi).  
+    But it has a major flaw! If a new record is added while you are reading, then every subsequent record is shifted by 1, so in the next response will result in duplicates or missing items. And on massive datasets it becomes very slow as offsetting still requires filtering the whole dataset.
+
+- **Cursor-Based Pagination:** Instead of an arbitrary offset number, the server gives you an opaque token (a "cursor"—often the timestamp or ID of the last item in your current list), and in the next request you give this token as the cursor so that te server starts searching records after that cursor (`WHERE id < cursor LIMIT 20`). 
+    E.g., Page 1 request: `GET /feed?limit=20`; Response includes: `{ "items": [...], "next_cursor": "eyJpZCI6MTAwfQ==" }`; Page 2 request:` GET /feed?limit=20&cursor=eyJpZCI6MTAwfQ==`
+    It is most often seen in Social Media apps such as X, Reddit, or apps like Stripe, Slack.
+
+- **PokeAPI:** <a id="pokeapi"></a> We will be using this api for practice of pagination. The endpoint is `https://pokeapi.co/api/v2/pokemon`. Hre we use 2 params: `limit` and `offset` both integers.
+
 
 
 #### System Design
