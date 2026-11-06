@@ -24,7 +24,7 @@ What api is. HTTP v/s HTTPS, a scoket,
     | **Query String** | Key-value filters/parameters (starts with `?`, joined by `&`) | `?userId=1&sort=desc` |
     | **Fragment** | Internal page anchor (never sent across the wire to the server!) [Explanation](#url_fragment)| `#summary` |
 
-#### What Actually happens behind the seen between the device and server initially.
+#### Under the Hood: From URL to Socket
 - **DNS (Domain NameSystem - Application Layer):** It is like The Internet’s Phonebook but for IP address. DNS is a global distributed database. When you type a hostname, your OS asks DNS resolver for the IP, the resolver looks it up and returns IP so your computer knows whose door to knock on.
 
 - **TCP (Transmission Control Protocol - Transport Layer):** It is a polite two-way radio check to maek sure that the connection is stable and works properly. It guarantees no lost packets and that bytes arrive in exact order. Before sending real data, client and server do a 3-step handshake best understood through the visual below. 
@@ -184,8 +184,46 @@ What api is. HTTP v/s HTTPS, a scoket,
     - Try request (attempt 2). If it fails wait 4s (${2}^{2}$) befoe the next try, ...;
     - If the requests keep failing we keep trying till max retries (set by us), then give up, and report an error.
 
+
+#### Real-World APIs, Data Flow, Pagination & Caching
+- **OpenAPI and Swagger:** The documentation for the API. As markdown or plain notes can become out dates pretty fast, we have a standard defined with OpenAPI and Swagger.  
+    *OpenAPI Specifications (OAS):* It is a standardized and machine-readable format (JSON or YAML) that formally defines an entire API. Its available paths, the format of the payload in any request, response status code, etc.  
+    *Swagger:* It is a toolset build around OAS. It has various part, the most famous is Swagger UI. It is like the `/docs` in FastAPI. It is an interactive HTML documentation page automatically generated from that OpenAPI spec.
+
+- **Open-Meteo API:**  We will be using this api for practice. On the page (https://open-meteo.com/en/docs#api_documentation) the api end point is `v1/forecast`, which makes the URL, `https://api.open-meteo.com/v1/forecast` to be used in get. 
+    Its parameters include:
+        - `latidue` & `latitude`: These are required parameters, and should be floats.
+        - Metrics like `current`, in which we define variables whose current condition should be returned; `hourly`, variables whose hourly condition should be returned; `daily`, variables whose daily condition should be returned. These are string array. They can be common separated or use multiple `&hourly=` elements.
+        - The timezone, in it, we define the UTC offset, like +5:30 for India. In the response we receive a key `utc_offset_seconds` for it.
+    A successful return object: 
+    ```json
+    {
+        "latitude": 52.52,
+        "longitude": 13.419,
+        "elevation": 44.812,
+        "generationtime_ms": 2.2119,
+        "utc_offset_seconds": 0,
+        "timezone": "Europe/Berlin",
+        "timezone_abbreviation": "CEST",
+        "hourly": {
+            "time": ["2022-07-01T00:00", "2022-07-01T01:00", "2022-07-01T02:00", ...],
+            "temperature_2m": [13, 12.7, 12.7, 12.5, 12.5, 12.8, 13, 12.9, 13.3, ...]
+        },
+        "hourly_units": {
+            "temperature_2m": "°C"
+        }
+    }
+    ```
+
 - **Header:** 
 
+- **Header:** 
+
+
+#### System Design
+- **Header:** 
+
+- **Header:** 
 
 
 
