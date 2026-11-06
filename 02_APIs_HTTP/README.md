@@ -230,6 +230,22 @@ What api is. HTTP v/s HTTPS, a scoket,
 
 - **PokeAPI:** <a id="pokeapi"></a> We will be using this api for practice of pagination. The endpoint is `https://pokeapi.co/api/v2/pokemon`. Hre we use 2 params: `limit` and `offset` both integers.
 
+- **Disk Caching:** In real world requesting the server for some data which changes rarely is a waste. It wastes your rate limits, adds network latency, or just breaks if your internet drops or the upstream server goes down. So we do the following:  
+    ```mermaid
+    flowchart TD
+        Start([Need Data for City/Resource]) --> Check{File exists in<br/>data/cache/?}
+        Check -- Yes: Cache Hit --> ReadFile["Read JSON from disk (json.load)"]
+        ReadFile --> Return([Return Data Instantly])
+        
+        Check -- No: Cache Miss --> Fetch["Call fetch_json via Network"]
+        Fetch --> Save["Save to data/cache/*.json (json.dump)"]
+        Save --> Return
+    ```
+    
+
+- **Header:** 
+
+- **Header:** 
 
 
 #### System Design
