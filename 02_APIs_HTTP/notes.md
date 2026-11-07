@@ -132,3 +132,78 @@
   - Assuming HTTP `200 OK` guarantees valid JSON data (captive portals return 200 with HTML).
   - Retrying `404` or `401` errors (they will never succeed without fixing URL or auth).
   - Sleeping on the final attempt before raising an error.
+
+
+## [Real APIs, OpenAPI & Documentation Specs]
+
+- **The Mental Model:** Markdown documentation quickly becomes stale when engineers change code. OpenAPI Specification (OAS) is the formal, machine-readable blueprint (JSON/YAML) of an API. Swagger UI is an interactive frontend automatically rendered from that blueprint.
+- **How it Works:**
+  1. **OpenAPI Spec:** Standardized schema listing paths, HTTP methods, required query/path parameters, and response schemas.
+  2. **Swagger UI:** The web client (like `/docs` in FastAPI) generated from OAS allowing manual testing in browser.
+  3. **Parameter Types:**
+     - Query parameters (`?key=val`): filtering, pagination, coordinates.
+     - Path parameters (`/users/{id}`): identifying a specific resource.
+- **Ari's Code:**
+  ```python
+  params = {
+      "latitude": 28.6139,
+      "longitude": 77.2090,
+      "current": "temperature_2m,weather_code",
+      "daily": "temperature_2m_max,temperature_2m_min",
+      "timezone": "auto",
+  }
+  resp = fetch_json(url="https://api.open-meteo.com/v1/forecast", params=params)
+  ```
+- **Common Pitfalls:**
+  - Misspelling query parameter keys (e.g. `latidute` instead of `latitude`), which causes the server to ignore inputs or return empty payloads with `200 OK`.
+  - Confusing Swagger UI (the webpage tool) with OpenAPI (the underlying specification).
+
+
+## [API Pagination: Offset/Limit vs Cursor]
+
+- **The Mental Model:** Servers cannot send millions of rows in one response. They slice data into pages. Offset pagination is like flipping page numbers in a book; cursor pagination is like bookmarking the exact ID/timestamp of where you stopped.
+- **How it Works:**
+  1. **Offset/Limit:** Client requests `limit=10&offset=0`. Page 2 is `limit=10&offset=10`.
+     - *Flaw:* If items are inserted/deleted in real time, offsets shift, causing duplicate or skipped items.
+  2. **Cursor / Keyset:** Server returns an opaque token (`cursor="id_123"`) representing the last item. Client requests `cursor="id_123"`.
+     - *Benefit:* Stable against real-time insertions; $O(1)$ database query performance.
+  3. **Following Next Links:** Many APIs (PokeAPI, GitHub) provide a `next` link directly inside the response headers or body.
+- **Ari's Code:**
+  ```python
+  url = "https://pokeapi.co/api/v2/pokemon?limit=10&offset=0"
+  for _ in range(page_count):
+      resp = fetch_json(url=url)
+      pages.append(resp.get("results"))
+      url = resp.get("next")  # Server drives pagination
+  ```
+- **Common Pitfalls:**
+  - Manually computing string offsets instead of consuming the server-provided `next` link.
+  - Assuming an offset pagination query is cheap on millions of records (databases must scan and throw away $N$ rows).
+
+
+## [Disk Caching with Metadata & TTL Invalidation]
+
+- **The Mental Model:** The pantry pattern. Check local disk before heading out to the network store. If the food in the pantry is missing or expired (TTL), fetch fresh data and store it with a timestamp.
+- **How it Works:**
+  1. Check if the cache file exists on disk and is non-empty (`file.stat().st_size > 0`).
+  2. Read cache file containing an envelope: `{"time": "<timestamp>", "response": {...}}`.
+  3. Compute elapsed time: `time_diff = datetime.now() - saved_time`.
+  4. If `time_diff` exceeds TTL threshold (e.g. $> 1$ day), treat as a cache miss.
+  5. On cache miss: fetch from API, serialize to disk with `json.dump(..., default=str)`, return payload.
+- **Ari's Code:**
+  ```python
+  def check_load_data(file: Path) -> dict | None:
+      if (not file.exists()) or file.stat().st_size == 0:
+          return None
+      with open(file, 'r') as fh:
+          content = load(fh)
+      time_diff = dt.now() - dt.strptime(content.get('time'), '%F %T.%f')
+      if time_diff.days > 1:
+          return None
+      return content.get('response')
+  ```
+- **Common Pitfalls:**
+  - Calling `.touch()` or creating 0-byte files before checking existence, causing `JSONDecodeError` on subsequent reads.
+  - Calling `.readline()` multiple times on an open file handle, which advances the stream pointer and starves `json.load()`.
+  - Creating files in non-existent parent directories without `mkdir(parents=True, exist_ok=True)`.
+

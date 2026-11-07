@@ -27,5 +27,11 @@ Follow these 4 core rules for every interaction:
 - Provide a structured, professional Git commit message using Conventional Commits format (feat, fix, refactor, docs, etc.).
 - Briefly explain *why* the commit message is written that way, focusing on describing the "why" and "what" rather than the literal code changes, so Ari learns the habit of writing excellent history logs.
 
+5. VERIFICATION GATES & RETEST INTEGRITY
+- 6-8 atomic True/False statements per checkpoint, key hidden.
+- Retests must be fresh statements that could be false; restating the corrected fact as a true statement does not count.
+- Save Ari's answers verbatim. Grade Correct/Partial/Incorrect (no "mostly").
+- Do not call anything "mastered".
+
 
 When working inside the /Milestones directory, you must strictly follow these mentor rules. Do not apply these rules outside of this folder. Unless specified otherwise.

@@ -4,6 +4,8 @@ __pycache__/
 *.db
 *.sqlite
 .env
+**/data/cache/
+**/data/output/
 
 Journey_Docs/
 .vscode/

@@ -241,7 +241,37 @@ What api is. HTTP v/s HTTPS, a scoket,
         Fetch --> Save["Save to data/cache/*.json (json.dump)"]
         Save --> Return
     ```
-    
+
+#### Authentication, Secrets Hygiene & Rate Limits
+- **Auth Types:** When an API wants to know who is calling it, it asks for credentials, based upon the format the authentication differs.
+    1. **API Key:** A static secret string given to your account. Passed either as a Query Parameter (?api_key=xyz or ?key=xyz like NASA API) or as a Custom Header (X-API-Key: xyz)
+    2. **Bearer Token:** Used by modern APIs. Its like a physical key/id. "Bearer" literally means "Whoever holds (bears) this token is granted access." It is passed in the standard Authorization header prefixed with Bearer as:
+    ```http
+    Authorization: Bearer
+    ghp_xxxxxxxxxxxxxxxxxxxx
+    ```
+    3. **Basic Auth (Legacy):** Passes username and password encoded in Base64: Authorization: Basic dXNlcjpwYXNz. (Rarely used in modern public APIs).
+    4. **OAuth 2.0:** In it the user doesn't provide any token or password. Instead, the third-party app redirects you to GitHub's login page ("Authorization Code Flow"). You log in and click "Authorize". GitHub gives the app an access token (short-lived) and a refresh token (to get a new access token when it expires)
+
+- **Storage of tokens/passwords:** Such sensitive information is to be stored in a file named `.env` which is never to be tracked. We do this because if by mistake the token or password get leaked or pushed bots scrape it and abuse it.
+    ```bash
+    GITHUB_TOKEN=ghp_yourActualSecretTokenHere
+    ```
+
+- **`python-dotenv`:** We use this library to work with `.env` files. The code is like:
+    ```python
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()  # Reads .env from disk and loads into os.environ
+    token = os.getenv("GITHUB_TOKEN")
+    ```
+
+- **Limitng:** We will be using github's AI, ie, `GET https://api.github.com/rate_limit`. Must know of this:
+    - `X-RateLimit-Limit`: Total requests allowed per hour (60 for unauthenticated, 5,000 for token).  
+    - `X-RateLimit-Remaining`: How many requests you have left in the current 60-minute window.  
+    - `X-RateLimit-Reset`: An integer timestamp (Unix Epoch seconds) when your budget resets back to full.  
+    - `Retry-After`: If you hit an aggressive secondary rate limit (429 Too Many Requests), the server attaches this header telling you how many seconds to wait before trying again.
 
 - **Header:** 
 
@@ -249,9 +279,7 @@ What api is. HTTP v/s HTTPS, a scoket,
 
 
 #### System Design
-- **Header:** 
-
-- **Header:** 
+For the github activity report build go to [Desgin.md](/02_APIs_HTTP/src/02_apis_http/build/gh_report/DESIGN.md)
 
 
 

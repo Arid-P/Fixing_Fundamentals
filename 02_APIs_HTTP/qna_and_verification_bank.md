@@ -132,3 +132,33 @@ This bank records all atomic verification statements, learner verbatim responses
 **Score:** 7 / 7 Correct.
 - **Atoms cleared:** M02.11, M02.12.
 - **Deliverable verified:** `src/02_apis_http/build/fetcher_core.py` built by learner with real exponential backoff terminal proof.
+
+---
+
+## Checkpoint M2-5 Verification (Real Data, Pagination, Caching & File I/O)
+**Date:** 2026-11-07
+
+### Statements
+1. An OpenAPI document is an interactive HTML web page with forms that developers click in a browser to test API endpoints.
+2. In offset/limit pagination, if a new record is inserted into page 1 while a user is reading, requesting page 2 on the next call can shift items and cause the client to see a duplicate record.
+3. In cursor-based pagination, the client passes an integer offset parameter so the server's database can scan and skip that exact number of rows.
+4. When implementing disk caching, the presence of a 0-byte file on disk should be treated as a valid cache hit and parsed directly using `json.load()`.
+5. A Time-To-Live (TTL) cache invalidation strategy requires storing timestamp metadata alongside the cached payload so the client can evaluate whether the data has expired.
+6. Calling `fh.readline()` on an open Python file object inspects the next line of text without advancing the internal file cursor for subsequent read operations.
+7. If an API endpoint requires `latitude` and `longitude` query parameters, submitting misspelled parameter names (like `latidute`) will always produce an HTTP `404 Not Found` status code.
+
+### Learner Response (Verbatim)
+`f, t, f, f, t, f, f`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: False | Key: False — OpenAPI is a machine-readable JSON/YAML spec; Swagger UI is the HTML interface)
+- **Statement 2:** Correct (Answered: True | Key: True — inserting rows into page 1 shifts offset boundaries)
+- **Statement 3:** Correct (Answered: False | Key: False — cursor pagination sends an opaque pointer/ID, not an integer skip offset)
+- **Statement 4:** Correct (Answered: False | Key: False — 0-byte file is unparseable and must be treated as a cache miss)
+- **Statement 5:** Correct (Answered: True | Key: True — TTL relies on recorded timestamp metadata to calculate freshness)
+- **Statement 6:** Correct (Answered: False | Key: False — fh.readline() consumes bytes and advances the file cursor forward)
+- **Statement 7:** Correct (Answered: False | Key: False — route exists; missing/invalid query params yield 400/422 or empty 200, not 404)
+
+**Score:** 7 / 7 Correct.
+- **Atoms cleared:** M02.16, M02.17, M02.19.
+
