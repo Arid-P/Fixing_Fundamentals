@@ -7,7 +7,11 @@
 
 
 ## What I built
-What api is. HTTP v/s HTTPS, a scoket, 
+- Practice scripts: `break_things.py`, `get_practice.py`, `poke_pagination.py`, `open_mtro_practice.py`.
+- Retry helper `fetcher_core.py` with exponential waiting built-in.
+- Disk-caching prototype with TTL, `weather_cache_prototype.py`.
+- Rate limit and `.env` access scripts: `dotenv_pactice.py`, `rate_limit.py`.
+- Currently working on `gh_report`.
 
 ## What actually clicked
 - **What actually Happens Between your device and server:** When your browser or a Python script talks to a server, it does not "open a link". It opens a network connection (TCP socket) to a remote computer and sends plain text formatted according to the HTTP specification. The server reads that text, processes it, and streams plain text back. 
@@ -47,7 +51,7 @@ What api is. HTTP v/s HTTPS, a scoket,
             $Socket = IP Address + Port Number$  
     So a Socket is just like a IP but for a specific program on your computr insteadof the whole computer.
 
-> Refer to [Responses File to properly see exactly what I am using in examples](/02_APIs_HTTP/response.md#L90) But temporary consider what is shown below
+> Refer to [Responses File to properly see exactly what I am using in examples](/02_APIs_HTTP/src/02_apis_http/response.md#L90) But temporary consider what is shown below
 ```txt
 > GET /posts/1 HTTP/2
 > Host: jsonplaceholder.typicode.com
@@ -56,7 +60,7 @@ What api is. HTTP v/s HTTPS, a scoket,
 > 
 ```
 
-- **Response Line:** It has 3 parts: [The Method](#Method) (GET), The Path, and the Protocaol Version. `[METHOD] [PATH] [HTTP_VERSION]`
+- **Request Line:** It has 3 parts: [The Method](#Method) (GET), The Path, and the Protocaol Version. `[METHOD] [PATH] [HTTP_VERSION]`
     ```txt
     > GET /posts/1 HTTP/2
     ```
@@ -122,10 +126,10 @@ What api is. HTTP v/s HTTPS, a scoket,
 - **Response Object:** When we use request module, we call or sent the request using `requests.get(...)`. This does not return text or JSON instead it returns everything in a `Response` object. So we use methods to aces different values form the object.
 
 - **Methods & Attributes of `Response` Object:**
-    - *`obj.status_code() -> int`*: Gives an integer representing the HTTP status code (200, 404, etc)
-    - *`obj.headers() -> dict`*: A case-insensitive dictionary of response headers sent by the server.
-    - *`obj.text() -> str`*: The raw response as a Python `str`, the decoding of the content is according to whatever is specified when calling `get`.
-    - *`obj.json() -> dict | list`*: It passes `obj.text()` as JSON and returns a Python `dict` or `list`. *Pitfall: if the server returned HTML or plain text, calling .json() crashes with a JSONDecodeError*
+    - *`obj.status_code -> int`*: Gives an integer representing the HTTP status code (200, 404, etc)
+    - *`obj.headers -> dict`*: A case-insensitive dictionary of response headers sent by the server.
+    - *`obj.text -> str`*: The raw response as a Python `str`, the decoding of the content is according to whatever is specified when calling `get`.
+    - *`obj.json() -> dict | list`*: It passes `obj.text` as JSON and returns a Python `dict` or `list`. *Pitfall: if the server returned HTML or plain text, calling .json() crashes with a JSONDecodeError*
     - *`obj.raise_for_status() -> `*: An essential error-check method. If the status code is `4xx` or `5xx`, i.e., some error has occured, it raises an HTTPError. If the response is `2xx`/`3xx`, it silently does nothing.
 
 - **Path Params vs Query Params vs Body:** Here we will see where the data goes when we call an api.
@@ -176,7 +180,7 @@ What api is. HTTP v/s HTTPS, a scoket,
     - ***What to do:*** Use `status_code` or `raise_for_status()` to first ensure that the request was a success, __and__ wrap `.json()` within a `try...except` and __validate the data keys__.
 
 - **`requests.Session`:** Every time we use `get()` the whole process from DNS lookup to the closing of socket takes place for a single process. So 50 API calls means the whole cycle repeating 50 times, resulting in a lot of waste.  
-    So to resolve this we use `Session()` to establish the connection along with the socket only once, and utilize it for a number of API calls. This results in the request being 3x to 5x faster. It also preserves cookies and default headers across requests.
+    So to resolve this we use `Session()` to establish the connection along with the socket only once, and utilize it for a number of API calls. This results in the request being can be noticeably faster (it varies). It also preserves cookies and default headers across requests.
 
 - **Retry with Exponential Backoff:** In any case like API overload (429, 503), or when a packet drops, or some error occurs, you don't just immediately crash and show that request failed, nor, continuously request the server. Instead, we implement __Exponential Backoff__:
     - Try request (attempt 0). If it fails wait 1s (${2}^{0}$) befoe the next try,
@@ -267,7 +271,7 @@ What api is. HTTP v/s HTTPS, a scoket,
     token = os.getenv("GITHUB_TOKEN")
     ```
 
-- **Limitng:** We will be using github's AI, ie, `GET https://api.github.com/rate_limit`. Must know of this:
+- **Limitng:** We will be using GitHub's API, ie, `GET https://api.github.com/rate_limit`. Must know of this:
     - `X-RateLimit-Limit`: Total requests allowed per hour (60 for unauthenticated, 5,000 for token).  
     - `X-RateLimit-Remaining`: How many requests you have left in the current 60-minute window.  
     - `X-RateLimit-Reset`: An integer timestamp (Unix Epoch seconds) when your budget resets back to full.  
@@ -307,6 +311,17 @@ For the github activity report build go to [Desgin.md](/02_APIs_HTTP/src/02_apis
 - 28 Oct: thought http:// defaults to 443, it's 80 (443 is for https://).
 
 - 5 Nov: Struggled slightly with `json=`, `data=`.
+
+- 6 Nov (M2-4):
+    - `.json()` only parsing/failing when explicitly called, not at request time.
+    - `range(max_retries)` off-by-one error (attempt 0 vs attempt 1).
+    - Sleeping on the final failed retry instead of immediately raising.
+    - `UnboundLocalError` when `resp` wasn't initialized before `try`, and how a bare `raise` behaves.
+    - Forgetting or figuring out how to close/manage a `Session`.
+
+- 7 Nov (M2-5 & M2-6):
+    - `readline()` advancing the file cursor during metadata checks.
+    - Passing a Bearer token via params= instead of the `Authorization` header.
 
 ## Open questions / revisit later
 - Networking Layers at the hardware level.
