@@ -273,10 +273,6 @@ What api is. HTTP v/s HTTPS, a scoket,
     - `X-RateLimit-Reset`: An integer timestamp (Unix Epoch seconds) when your budget resets back to full.  
     - `Retry-After`: If you hit an aggressive secondary rate limit (429 Too Many Requests), the server attaches this header telling you how many seconds to wait before trying again.
 
-- **Header:** 
-
-- **Header:** 
-
 
 #### System Design
 For the github activity report build go to [Desgin.md](/02_APIs_HTTP/src/02_apis_http/build/gh_report/DESIGN.md)
