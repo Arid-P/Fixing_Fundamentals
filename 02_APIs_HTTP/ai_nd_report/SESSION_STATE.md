@@ -6,7 +6,7 @@
 - **Atoms Pending Gate:** M02.20 (formal check at M2-7)
 - **Atoms Open:** M02.21 (optional httpx preview)
 - **Q&A File Path:** `02_APIs_HTTP/ai_nd_report/qna_and_verification_bank.md`
-- **Hours Reported:** ~13.0h total (M2-1: 1.75h, M2-2: 2.00h, M2-3: 2.00h, M2-4: 2.00h, M2-5: ~4.25h, M2-6: ~1.0h)
+- **Hours Reported:** ~16.0h total (M2-1: 1.75h, M2-2: 2.00h, M2-3: 2.00h, M2-4: 2.00h, M2-5: ~4.25h, M2-6: ~1.0h, M2-7 Design: 3.0h)
 - **Next Checkpoint:** M2-7 (Design review of gh_report in DESIGN.md, assembly, acceptance tests, formal M02.20 check, auth_demo.py)
 - **Open Issues / Notes:**
   - Build target pivoted to `src/02_apis_http/build/gh_report/` (design first).

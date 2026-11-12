@@ -7,7 +7,7 @@ def wait(retry: int) -> None:
     print(f"Retrying after a wait of {wait_time} seconds.", end=" ", flush=True)
 
     time.sleep(wait_time)
-    print("Retrying", flush=True)
+    print("Retrying")
 
 
 def fetch_json(
@@ -15,7 +15,7 @@ def fetch_json(
 ) -> dict | list | None:
     with requests.Session() as session:
         resp, err = None, None  # to keep resp in in bounds
-        
+
         for retry in range(max_retries):
             try:
                 resp = session.get(url, timeout=timeout, params=params)
