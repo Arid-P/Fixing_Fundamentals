@@ -162,3 +162,33 @@ This bank records all atomic verification statements, learner verbatim responses
 **Score:** 7 / 7 Correct.
 - **Atoms cleared:** M02.16, M02.17, M02.19.
 
+---
+
+## Checkpoint M2-6 Verification (Auth Types, Secrets Hygiene & Rate Limits)
+**Date:** 2026-11-07
+
+### Statements
+1. Passing an API key in a URL query parameter (e.g. `?api_key=secret`) is inherently less secure than passing it in an `Authorization` header because URLs can be logged in plain text by browser history, proxy servers, and access logs.
+2. The `Bearer` authentication scheme requires the client to encrypt the token using the server's public key before attaching it to the `Authorization` header.
+3. In OAuth 2.0, the authorization code flow allows a user to grant a third-party application access to their data without ever exposing their actual account password to that application.
+4. Calling `load_dotenv()` will override any existing environment variables that were already exported in the shell by default unless configured otherwise.
+5. If an API secret is accidentally committed and pushed to a public GitHub repo, deleting the secret in a new commit and pushing again is sufficient to keep the secret secure.
+6. The `X-RateLimit-Reset` header typically contains an integer representing Unix Epoch time (seconds since Jan 1, 1970 UTC) indicating when the rate limit window refreshes.
+7. If an API returns status code `429 Too Many Requests`, a well-behaved client should immediately spin in a tight `while True` loop retrying the request every 10 milliseconds until it succeeds.
+
+### Learner Response (Verbatim)
+`t, f, t, f, f, t, f`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: True | Key: True — URLs get recorded in server logs and browser histories; headers are suppressed)
+- **Statement 2:** Correct (Answered: False | Key: False — Bearer token is transmitted as an unencrypted string within the encrypted TLS tunnel)
+- **Statement 3:** Correct (Answered: True | Key: True — OAuth 2.0 delegates authentication via temporary tokens without exposing credentials)
+- **Statement 4:** Correct (Answered: False | Key: False — python-dotenv defaults to `override=False`, preserving existing environment variables)
+- **Statement 5:** Correct (Answered: False | Key: False — Git retains commits in history; leaked secrets must be rotated immediately)
+- **Statement 6:** Correct (Answered: True | Key: True — X-RateLimit-Reset is a standard Unix epoch integer timestamp)
+- **Statement 7:** Correct (Answered: False | Key: False — tight retries hammer servers and worsen rate bans; client must respect backoff or Retry-After)
+
+**Score:** 7 / 7 Correct.
+- **Atoms cleared:** M02.07 (part 2 fully cleared), M02.13, M02.14, M02.15.
+
+

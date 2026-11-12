@@ -207,3 +207,78 @@
   - Calling `.readline()` multiple times on an open file handle, which advances the stream pointer and starves `json.load()`.
   - Creating files in non-existent parent directories without `mkdir(parents=True, exist_ok=True)`.
 
+
+## [API Authentication Types & OAuth 2.0]
+
+- **The Mental Model:** Credentials prove who is knocking at the server's door. An API key is a simple access badge; a Bearer token is a concert wristband ("whoever bears this is allowed entry"); OAuth 2.0 is the front desk verifying your identity and handing you a temporary badge so you never give your master password to guests.
+- **How it Works:**
+  1. **API Key:** Static token passed as query param (`?api_key=...`) or custom header (`X-API-Key: ...`).
+  2. **Bearer Token:** Attached to the standard HTTP `Authorization` header: `Authorization: Bearer <token>`.
+  3. **Basic Auth:** Base64-encoded username and password: `Authorization: Basic <base64>`.
+  4. **OAuth 2.0:** User delegates access to a 3rd party via an Authorization Code exchange; 3rd party receives a short-lived access token and a refresh token without ever seeing the user's password.
+- **Ari's Code:**
+  ```python
+  headers = {
+      "User-Agent": "Ari-Test",
+      "Authorization": f"Bearer {token}",
+  }
+  resp = requests.get("https://api.github.com/rate_limit", headers=headers)
+  ```
+- **Common Pitfalls:**
+  - Passing headers to `params=` (which appends them to the URL query string instead of sending them in the HTTP headers block).
+  - Misspelling the header name (e.g. `Authoization`).
+
+
+## [Secrets Hygiene & Environment Management]
+
+- **The Mental Model:** The air-gapped vault. Code is public; configuration and secrets are private. Secrets never touch git commits; they live in local `.env` files read into memory at runtime by the OS environment.
+- **How it Works:**
+  1. Create `.env` in the project root containing `KEY=value`.
+  2. Add `.env` to `.gitignore` before creating or committing the file.
+  3. Verify with `git check-ignore -v .env`.
+  4. In Python, use `python-dotenv`:
+     ```python
+     from dotenv import load_dotenv
+     import os
+     load_dotenv()
+     token = os.getenv("GITHUB_TOKEN")
+     ```
+  5. If a secret leaks to git: rotating/revoking the key immediately is mandatory because git commit history is permanent.
+- **Ari's Code:**
+  ```python
+  import os
+  from dotenv import load_dotenv
+
+  load_dotenv()
+  token = os.getenv("GITHUB_TOKEN")
+  ```
+- **Common Pitfalls:**
+  - Believing a second commit that deletes the secret removes it from git (historical commits still contain the secret; it must be rotated).
+  - Hardcoding tokens in test scripts.
+
+
+## [Rate Limits & Header Inspection]
+
+- **The Mental Model:** The toll gate. Servers limit request volume per IP/user to prevent denial of service and conserve resources.
+- **How it Works:**
+  1. **Headers returned by server:**
+     - `X-RateLimit-Limit`: Maximum requests per window (e.g. 60 vs 5,000 on GitHub).
+     - `X-RateLimit-Remaining`: Count of requests remaining.
+     - `X-RateLimit-Reset`: Unix Epoch seconds when the budget resets.
+     - `Retry-After`: Seconds to wait when encountering status `429 Too Many Requests`.
+  2. **Handling 429 / Exhaustion:**
+     - When `Remaining == "0"`, compute sleep time from `Reset - now` or `Retry-After`.
+     - Stop or sleep with exponential backoff; never spin in a busy loop.
+- **Ari's Code:**
+  ```python
+  limit = resp.headers.get("X-RateLimit-Limit")
+  remaining = resp.headers.get("X-RateLimit-Remaining")
+  reset_epoch = float(resp.headers.get("X-RateLimit-Reset"))
+  time_diff = dt.fromtimestamp(reset_epoch) - dt.now()
+  print(f"Limit: {limit}, Remaining: {remaining}, Resets in: {time_diff.seconds // 60} mins")
+  ```
+- **Common Pitfalls:**
+  - Ignoring `X-RateLimit-Remaining` until receiving a hard 429 block.
+  - Retrying immediately on a 429 instead of backing off.
+
+
