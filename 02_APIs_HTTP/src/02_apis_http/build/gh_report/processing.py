@@ -10,41 +10,58 @@ def wait(retry: int) -> None:
     print("Retrying")
 
 
-def fetch_json(
-    url: str, params: dict | None = None, max_retries: int = 3, timeout: float = 5.0
-) -> dict | list | None:
-    with requests.Session() as session:
-        resp, err = None, None  # to keep resp in in bounds
+def fetch(
+    url: str,
+    params: dict | None = None,
+    headers: dict | None = None,
+) -> dict:
+    max_retries: int = 3
+    timeout: float = 5.0
 
+    # to keep them in bound in
+    resp: requests.Response = requests.Response()
+    data = requests.Response().json()
+    err: (
+        requests.ConnectionError
+        | requests.Timeout
+        | requests.HTTPError
+        | requests.JSONDecodeError
+        | None
+    ) = None
+
+    with requests.Session() as session:
         for retry in range(max_retries):
             try:
-                resp = session.get(url, timeout=timeout, params=params)
+                resp = session.get(url, headers=headers, params=params, timeout=timeout)
+
                 resp.raise_for_status()
-                return resp.json()
+                data = resp.json()
 
-            except (requests.ConnectionError, requests.Timeout):
-                if retry == max_retries - 1:
-                    raise
-                wait(retry)
-
-            except requests.HTTPError:
-                if resp.status_code in [429, 503]:  # type: ignore
-                    if retry == max_retries - 1:
-                        raise
+            except (requests.ConnectionError, requests.Timeout) as e:
+                err = e
+                if retry != max_retries - 1:
                     wait(retry)
-                else:
-                    raise
+
+            except requests.HTTPError as e:
+                err = e
+                if resp.status_code in [401, 403, 404, 429]:
+                    break
+
+            except requests.JSONDecodeError as e:
+                err = e
+                data = None
+
+    return {
+        "status code": resp.status_code,
+        "error": err,
+        "header": resp.headers,
+        "data": data,
+    }
 
 
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
-    # sucessful try
-    js = fetch_json("https://httpbin.org/json", max_retries=2, timeout=3)
-    print(js)
-
-    js1 = fetch_json("https://httpbin.org/delay/4", max_retries=5, timeout=3)
-    js2 = fetch_json("https://httpbin.org/status/404", max_retries=5, timeout=3)
-    print(js1, js2, sep="\n\n")
+    ...
 
 
 if __name__ == "__main__":

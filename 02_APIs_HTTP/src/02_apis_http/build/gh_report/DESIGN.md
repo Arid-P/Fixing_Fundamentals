@@ -63,7 +63,27 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
     - `display_lang_stat_table`
     - `display_rate_limit`
 
-- The `processing` file will have all the functions that will call the API and process its output. The `fetch_json` function will be here, and its architecture will be updated to: ...
+- The `processing` file will have all the functions that will call the API and process its output. The `fetch_json` function will be here, and its architecture will be updated to: 
+    ```python
+    def fetch(
+        url: str,
+        params: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict:
+
+        max_retries: int = 3
+        timeout: float = 5.0
+        ...
+    ```
+    And it will return something like:
+    ```python
+    return {
+        "status code": resp.status_code,
+        "error": err,
+        "header": resp.headers,
+        "data": data,
+    }
+    ```
 
 > Side Note: The `fetcher_core.py` will be renamed to `processing.py` and the function will be renamed to `fetch`.
 
@@ -131,6 +151,10 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 - The `cache.py` file will manage all the functions that read or write on the cache files. In the script file's parent folder we will create data/cache/ and store the cache files there.
 
 ## Constraints (time, memory, hardware, cost)
+- Rate limits: 60 req/hr (unauthenticated) vs 5,000 req/hr (authenticated).
+- Network timeout: 5.0 seconds per request.
+- Max retries: 3 attempts with exponential back off on transient errors (connection/timeouts).
+- Memory & Disk: Cache stored locally on disk under `data/cache/`
 
 ## Failure modes and handling
 1. **No arguments in CLI:** Then we have a proper input function that inputs which option does the user want (`information`, `GitHub Token`, `exit`).
@@ -143,29 +167,65 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 
 5. **Path in -T flag is missing:** If the path is missing we give the error that no path was provided  and exit the program. 
 
-## Tradeoffs considered (option A vs B, why chosen)
-
 ## Test plan (how I will know it works)
+We will implement `pytest` for testing. Since our codebases is based on functional programming, we will have tests for each function.
 
 ---
 
 ## Specific Design Questions
 
-#### (a) What does the fetch layer return now, since fetch_json returns only JSON but this tool needs headers?
+#### (a) What does the fetch layer return now, since fetch_json returns only JSON but this tool needs headers? 
+- It returns a dictionary containing status code, error, headers, and the parsed JSON data:
+  ```python
+  {
+      "status code": resp.status_code,
+      "error": err,
+      "header": resp.headers,
+      "data": data,
+  }
+  ```
 
 #### (b) What stops the pagination loop and what caps the repo count?
+- We check the `Link` header in response headers to see if `Link` is present and if `rel="next"` is present. If `Link` is absent or `rel="next"` is not in it, the pagination loop stops.
 
 #### (c) Rate-limit policy and what the user sees
+- If the rate limit is exhausted (remaining = 0), we notify the user with the reset time in local time, and prompt whether they want the program to sleep for the remaining duration or exit cleanly.
 
 #### (d) Cache key, what is stored (body, ETag, time), and where the file lives with the path anchored to the file
 - The `cache.py` file will manage all the functions that read or write on the cache files. In the script file's parent folder we will create `data/cache/` and store the cache files there.
 
 #### (e) Error-to-message table
+|Status Code|Error|What to show to User|
+|---|---|--|
+|`401`|`HTTPError`|"Invalid GITHUB_TOKEN provided in .env."|
+|`403` or `429`|`HTTPError`|"Rate limit exceeded. Reset at {local_time}."|
+|`404`|`HTTPError`|"Error: User '{username}' does not exist on GitHub."|
+|None|`ConnectionError` or `Timeout`|"Network error: Could not reach GitHub API. Falling back to offline cache if available."|
+|`200`|`JSONDecodeError`|"Error: Received malformed response from server."|
+|None|`ValueError`|"Value Error: The provided value ({value}) doesn't match the required format ({data type})"|
 
 #### (f) Where the token is read and what happens if it is missing
 - The `main` file will how the `GitHub Token` and will pass it to `processing` functions.
 
 #### (g) Call cost for a user with N repos
+For a user with $N_{\text{repos}}$ total public repositories, requesting language statistics for the $K$ most recently pushed repositories:
+
+1. **Fetching All Repositories (with pagination):**
+   Using GitHub's maximum allowed page size ($\text{per\_page} = 100$):
+   $$\text{Calls}_{\text{repos}} = \left\lceil \frac{N_{\text{repos}}}{100} \right\rceil$$
+
+2. **Fetching Languages for Top $K$ Repositories:**
+   One endpoint request per repository:
+   $$\text{Calls}_{\text{languages}} = K$$
+
+3. **Rate Limit Status Check:**
+   $$\text{Calls}_{\text{rate\_limit}} = 1$$
+
+- **Total API Calls (Cold Cache / First Run):**
+  $$\text{Total Calls} = 1 + \left\lceil \frac{N_{\text{repos}}}{100} \right\rceil + K$$
+- **Primary Rate-Limit Cost with Cached ETags (`304 Not Modified`):**
+  $$\text{Rate-Limit Cost} = 0$$
+  *(GitHub consumes 0 core rate-limit quota when returning `304 Not Modified`)*.
 
 #### (h) Table and summary JSON layout
 - **`public repo table`:** It is the table that lists all the repos of a user. The format is like:
