@@ -6,7 +6,7 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 ## Inputs / Outputs
 1. We will use `argprase` library to initially process the arguments provided when running the script, `python gh_report.py <args>` in CLI. But if no argument is provided or some are missing or invalid then we prompt the user for it as told in [1 of Failure Modes and Handling](#failure-modes-and-handling).
 
-2. The user has main 3 tasks he can choose: `information` with flag `-i` or `-I` or `--info`, `GitHub Token` with flag `-t` or `-T` or `--token`, and `exit`, this will only be available when the user runs the scripts with no arguments, more details in [2 of Failure Modes and Handling](#failure-modes-and-handling).
+2. The user has main 3 tasks he can choose: `information` with flag `-i` or `-I` or `--info`, `GitHub Token` with flag `-t` or `-T` or `--token`, and `exit`, this will only be available when the user runs the scripts with no arguments, more details in [2 of Failure Modes and Handling](#failure-modes-and-handling). We will also have the flags: `-n`, `-N`, `N` for the number of most recently pushed repos for the variable `recent_count`.
 
 3. For `information` task, the user needs to provide two inputs: `user` and `N`. `user` is for which user's repo do we have to display in the `public repo table`. `recent_count` is the number most recent repos that the script needs to process for the `stats table`. [3 and 4 of Failure](#failure-modes-and-handling), [For Tables](#h-table-and-summary-json-layout)
 
@@ -50,7 +50,10 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
     - `utilis.py`
 
 - The `main` file will how the `GitHub Token` and will pass it to `processing` functions.
-- The `argprase` will be established in `main.py`, and will be passed as an argument in `cli.py` files' input functions.
+
+- Any data returning from `cli.py` must be valid data type.
+
+- The `argprase` will be established in `cli.py`
 
 - The `cli` will have 2 main input functions. All of them will return a python `dictionary`.  
     The main are:

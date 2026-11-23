@@ -6,6 +6,7 @@ __pycache__/
 .env
 **/data/cache/
 **/data/output/
+*.log
 
 Journey_Docs/
 .vscode/

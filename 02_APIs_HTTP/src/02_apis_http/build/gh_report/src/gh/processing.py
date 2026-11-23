@@ -1,6 +1,7 @@
 import time
 import requests
 
+from icecream import ic
 
 def wait(retry: int) -> None:
     wait_time = 2**retry
@@ -20,7 +21,7 @@ def fetch(
 
     # to keep them in bound in
     resp: requests.Response = requests.Response()
-    data = requests.Response().json()
+    data = requests.Response()
     err: (
         requests.ConnectionError
         | requests.Timeout
@@ -50,6 +51,7 @@ def fetch(
             except requests.JSONDecodeError as e:
                 err = e
                 data = None
+                break
 
     return {
         "status code": resp.status_code,
@@ -61,7 +63,7 @@ def fetch(
 
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
-    ...
+    ic(fetch("https://httpbin.org/status/200"))
 
 
 if __name__ == "__main__":
