@@ -8,24 +8,33 @@ from pathlib import Path
 
 from icecream import ic  # To debug
 
-from utilis import TaskType, setup_logging, get_logger
 from cli import cli_input
+from paths import env_path
+from utilis import TaskType, setup_logging, get_logger
 
 logger: logging.Logger = get_logger(__name__)
 # ic.disable()
 
 
+def load_token(path: Path, name: str) -> str | None:
+    logger.info("Loading the Github token for %s", name)
+    logger.debug("Path: %s", path)
+
+    try:
+        load_dotenv(path, override=True)
+        token: str = getenv("GITHUB_TOKEN")  # type: ignore
+
+        logger.info("The github token was loaded for %s", name)
+        return token
+    except FileNotFoundError:
+        logger.info("The env file does not exits")
+        return None
+
+
 def establish_env_token(source_file: Path, env_path: Path, tries: int = 1) -> None:
-    if not source_file.exists():
-        logger.info("Source file does not exits")
-        exit(f"No file exits at {source_file}")
+    logger.info("Establishing the env file")
 
-    logger.info("Lodding the source env file and the token")
-    load_dotenv(source_file)
-
-    source_token: str | None = getenv("GITHUB_TOKEN")
-    logger.info("Loaded the source env file and its token")
-
+    source_token: str | None = load_token(source_file, "provided path")
     if source_token is None:
         logger.info("The token in the soruce file is None")
         exit("The provided env file has no token")
@@ -37,12 +46,7 @@ def establish_env_token(source_file: Path, env_path: Path, tries: int = 1) -> No
     copy(source_file, env_path)
     logger.info("Source file's content were copied to the program's env")
 
-    logger.info("Lodding the program's env file and the token")
-
-    load_dotenv(env_path, override=True)
-    program_token: str | None = getenv("GITHUB_TOKEN")
-
-    logger.info("Loaded the program' env file and its token")
+    program_token: str | None = load_token(env_path, "program's token")
 
     if source_token != program_token:
         logger.info("The source token, and copied token dont match")
@@ -59,23 +63,12 @@ def establish_env_token(source_file: Path, env_path: Path, tries: int = 1) -> No
     return
 
 
-def load_token(env_path: Path) -> str | None:
-    logger.info("Loading the Github token")
-
-    load_dotenv(env_path)
-    token: str = getenv("GITHUB_TOKEN")  # type: ignore
-
-    logger.info("The github token was loaded")
-    return token
-
-
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
     setup_logging(verbose=True)
     logger.info("Estabished looging")
 
-    env_path = Path(Path(__file__).resolve().parent, "data", ".env")
-    load: dict[str, TaskType | str | int | Path] = cli_input()
+    load: dict[str, TaskType | str | int | Path | None] = cli_input()
 
     if load["todo"] is TaskType.EXIT:
         logger.info("User wants to exit")
@@ -91,11 +84,11 @@ def main() -> None:
         logger.info("The program's env file was created adn the token is accessible.")
 
     elif load["todo"] is TaskType.INFORMATION:
-        logger.info("User wants the infromation")
+        logger.info("User wants infromation")
 
-        username = load["user"]
-        recent_count = load["count"]
-        token = load_token(env_path=env_path)
+        username: str = load["user"]  # type: ignore
+        recent_count: int | None = load["count"]  # type: ignore
+        token: str | None = load_token(path=env_path, name="processing")
 
 
 if __name__ == "__main__":

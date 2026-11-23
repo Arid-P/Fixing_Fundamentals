@@ -6,6 +6,8 @@ from enum import Enum, auto
 
 from icecream import ic
 
+from paths import log_file
+
 
 class TaskType(Enum):
     INFORMATION = auto()
@@ -15,17 +17,11 @@ class TaskType(Enum):
 
 def setup_logging(verbose: bool = False) -> None:
     level: Literal[10] | Literal[20] = logging.DEBUG if verbose else logging.INFO
-    file: Path = Path(__file__).parent.parent.parent / "data" / "logs"
-    ic(file)
-    file.mkdir(parents=True, exist_ok=True)
-    file = file / "app.log"
-    ic(file)
-    file.touch()
 
     logging.basicConfig(
         level=level,
         format="%(asctime)s | %(levelname)s | %(name)s | %(funcName)s | %(message)s",
-        filename=file,  # The file where logs will be saved
+        filename=log_file,  # The file where logs will be saved
         filemode="a",
         datefmt="%Y-%m-%d %H:%M:%S",
     )

@@ -166,9 +166,9 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 
 3. **`user` Missing in `-i` flag:** If not provided we exit with message telling that no username was provided.
 
-4. **`recent_count` Missing in `-i` flag:** If this isn't provided then we just don't display the stats table instead we display the message that since no number of most recent was provided the table wasn't displayed.
+4. **`recent_count` Missing in `-i` flag:** If this isn't provided then we just suppose the `recent_count` to be $5$.
 
-5. **Path in -T flag is missing:** If the path is missing we give the error that no path was provided  and exit the program. 
+5. **Path in -T flag is missing:** If the path is missing we give the error that no path was provided and exit the program. 
 
 ## Test plan (how I will know it works)
 We will implement `pytest` for testing. Since our codebases is based on functional programming, we will have tests for each function.

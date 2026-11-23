@@ -67,7 +67,8 @@ def _prompt_input() -> dict[str, TaskType | str | int | Path]:
 
         user: str = input("Enter the username: ")
         recent_count: int = int_valid(
-            input("Enter the number of most recent repos to consider: ")
+            input("Enter the number of most recent repos to consider: "),
+            num_range=range(1, 101),
         )
 
         logger.info("Inputed the arguments and have validated it.")
@@ -89,7 +90,7 @@ def _prompt_input() -> dict[str, TaskType | str | int | Path]:
         return {"todo": TaskType.EXIT}
 
 
-def cli_input() -> dict[str, TaskType | str | int | Path]:
+def cli_input() -> dict[str, TaskType | str | int | Path | None]:
     args: argparse.Namespace = _parsering_cli_input()
 
     user = args.user
@@ -112,7 +113,9 @@ def cli_input() -> dict[str, TaskType | str | int | Path]:
     elif user is not None:
         username: str = str(user)
 
-        if recent_count is not None:
+        if recent_count is None:
+            recent_count: int = 5
+        else:
             recent_count: int = int_valid(recent_count)
 
         load = {"todo": TaskType.INFORMATION, "user": username, "count": recent_count}
