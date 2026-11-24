@@ -38,7 +38,7 @@ logger = get_logger(__file__)
 
 
 def api_failure_handler(
-    api_payload: dict[str, Any], payload: dict[str, Any]
+    api_payload: dict[str, Any], payload: dict[str, Any] = {"cache": False}
 ) -> tuple[dict[str, Any], bool]:
     # faliure cases
     if api_payload["status code"] == 304:

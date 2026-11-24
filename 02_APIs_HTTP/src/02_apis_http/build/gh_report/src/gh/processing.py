@@ -27,7 +27,7 @@ def _fetch(
     headers: dict | None = None,
 ) -> dict[str, Any]:
     max_retries: int = 3
-    timeout: float = 1.0
+    timeout: float = 5.0
 
     # to keep them in bound
     resp: requests.Response = requests.Response()
@@ -77,6 +77,13 @@ def _rate_limits(headers: dict[str, str]) -> dict[str, str]:
     url = r"https://api.github.com/rate_limit"
 
     payload: dict[str, Any] = _fetch(url=url, headers=headers)
+    _, error = api_failure_handler(api_payload=payload)
+
+    if error:
+        logger.info("Some error in rate limti calulation")
+        logger.debug("The payload: %s", payload)
+        ic(payload)
+        print("Some internal error has occured")
 
     time_diff = (dt.fromtimestamp(float(payload["headers"].get("X-RateLimit-Reset"))) - dt.now()).seconds  # type: ignore
 
