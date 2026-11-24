@@ -40,7 +40,6 @@ def establish_env_token(source_file: Path, env_path: Path, tries: int = 1) -> No
 
     logger.info("Creating the program's env file and copying the source file's content")
     logger.debug("The program's env file path: %s", env_path)
-    env_path.mkdir(parents=True, exist_ok=True)
 
     copy(source_file, env_path)
     logger.info("Source file's content were copied to the program's env")

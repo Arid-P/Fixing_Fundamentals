@@ -62,12 +62,13 @@ def api_failure_handler(
             )
             print("Invalid GITHUB_TOKEN provided in .env.")
         elif api_payload["status code"] == 404:
+            name = api_payload["request"].url.split('/')[4]
             logger.info(
                 "HTTPERROR has occured. Username provided does not exist. status code: %s",
                 api_payload["status code"],
             )
             print(
-                f"Error: User '{api_payload["request"].url}' does not exist on GitHub."
+                f"Error: User '{name}' does not exist on GitHub."
             )
         else:
             logger.info(
@@ -97,14 +98,14 @@ def int_valid(val, tries: int = 2, num_range: range | None = None) -> int:
             val = int(val)
 
             if num_range is not None and val not in num_range:
-                raise AttributeError
+                raise IndexError
 
             logger.info("The value is a intger and in range")
             logger.debug("The value provided is %s", val)
 
             return val
 
-        except TypeError:
+        except ValueError:
             logger.info("The value provided is not a integer")
             err_msg = "Error: the value provided is not integer as it was suppose to be"
 
@@ -112,7 +113,7 @@ def int_valid(val, tries: int = 2, num_range: range | None = None) -> int:
                 "Unforunately the value you enter is not intger.\nSo, please again enter the value: "
             )
 
-        except AttributeError:
+        except IndexError:
             logger.info("The value provied is not in range")
             err_msg = "Error: the value provided is not in range"
 

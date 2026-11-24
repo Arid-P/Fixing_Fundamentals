@@ -188,7 +188,12 @@ def _stats_repo(
 def _user_repos(username: str, headers: dict[str, str]) -> dict[str, Any]:
     # making the request
     logger.info("Fetching all the users repos")
-    repo_payload: dict[str, Any] = {"cache": False, "etag": "", "response": []}
+    repo_payload: dict[str, Any] = {
+        "user": username,
+        "cache": False,
+        "etag": "",
+        "response": [],
+    }
 
     url: str = f"https://api.github.com/users/{username}/repos"
     params: dict[str, Any] = {
@@ -259,12 +264,15 @@ def get_payload(
     all_repos: dict[str, Any] = _user_repos(username=username, headers=headers)
 
     if all_repos["cache"]:  # when cache is needed
-        cache_stat: dict[str, dict[str, Any]] = get_cached_repos_stats()
-        output_data = {
-            "repos": cache_repo,
-            "stats": cache_stat["stats"],
-            "lang_stats": cache_stat["lang_stats"],
-        }
+        if cache_repo and cache_repo["user"] == username:
+            cache_stat: dict[str, dict[str, Any]] = get_cached_repos_stats()
+            output_data = {
+                "repos": cache_repo,
+                "stats": cache_stat["stats"],
+                "lang_stats": cache_stat["lang_stats"],
+            }
+        else:
+            exit(f"User not found. No user exists with the name: {username}")
 
     else:  # When cache is useless
         stats_repo, languages = _stats_repo(

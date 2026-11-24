@@ -13,14 +13,18 @@ def wait(retry: int) -> None:
 
 # I have supposed that when here is nothing to return we just return a empty list
 def fetch_json(
-    url: str, params: dict | None = None, max_retries: int = 3, timeout: float = 5.0
+    url: str,
+    params: dict | None = None,
+    headers: dict | None = None,
+    max_retries: int = 3,
+    timeout: float = 5.0,
 ) -> dict | list | None:
     session = requests.Session()
 
     resp, err = None, None  # to keep resp in in bounds
     for retry in range(max_retries):
         try:
-            resp = session.get(url, timeout=timeout, params=params)
+            resp = session.get(url, timeout=timeout, headers=headers, params=params)
             resp.raise_for_status()
             return resp.json()
 
