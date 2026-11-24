@@ -95,65 +95,17 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
     6. `_stats_process()` requests `/languages` for the top $N$ recent repos and computes `untouched` status (`pushed_at >= 90 days`).
     7. `_lang_stats()` aggregates bytes across all returned languages and computes individual percentages of total bytes.
     8. `cache.update_cache()` writes `repos.json`, `stats.json`, and `lang_stats.json` atomically with backups.
+    9. `processing.summary_generator()` aggregates the summary metrics and saves them to `data/output/summary_<user>.json`.
+    10. `cli.cli_output()` renders styled `rich` tables and panels for all 4 sections in the terminal.
 
-- The `processing` will have 3 functions. Each of them will have their own URL, parameters, and headers which they will send to `fetch`. But the `GitHub Token` will be `global`. 
-    ```python
-    headers = {
-        "User-Agent": "Ari-Test",
-        "Authorization": f"Bearer {github_token}",
-        "If-None-Match": <etag>
-    }
-    ```
-
-- These functions are:
-    - `rate_limit_process`, it returns a `dict` like
-        ```json
-        {
-            "error": ...,
-            "total limit": ..., # <int>
-            "limit left": ..., # <int>
-            "reset_time": ..., # <str>, times variable given below
-            "reset_original": ... # the exact time in response
-        }
-        ```
-        ```python
-        times = [
-            f"{str(days) + " days " if days else ""}",
-            f"{str(hours) + " hours " if hours else ""}",
-            f"{str(mins) + " mins " if mins else ""}",
-            f"{str(sec) + " sec " if sec else ""}",
-        ]
-        ```
-    - `user_repos`, it accesses all the repos of a user sorted by `pushed` field in descending order (`desc`). It returns:
-        ```json
-        {
-            "error": ...,
-            "repos": [
-                {
-                    "full name": resp['full_name'],
-                    "name": resp['name'],
-                    "stars": resp['stargazers_count'],
-                    "pushed": resp['pushed_at'], # <ISO 8601>
-                    "forked": resp['fork']
-                }
-            ]
-        }
-        ```
-    - `stats_process`, it fetches the most recent repos' stats for the given `user`. It takes the output of `user_repos` function as one of its arguments, and works upon it. It returns:
-        ```json
-        {
-            "error": ...,
-            "full_name": ...,
-            "language": ...,
-            "stars": ...,
-            "untouched": ...,
-            "lang_stats": {
-                <lang_name>: ...,
-            }
-        }
-        ```
-
-- In all above functions, there is `error` field. Before moving to output we first need to check if it is `None` or not. If yes then proceed, otherwise we exit the program with the error being gracefully shown to user.
+- The `processing` file defines functions that manage specific API requests and data transformations:
+    - `_fetch(url, params, headers)`: Core HTTP helper with 3 retries, exponential backoff, and 5.0s timeout.
+    - `_rate_limits(headers)`: Calls `/rate_limit`, returning `rate-limit`, `rl-left`, `rl-reset`, and `rl-rest-time`.
+    - `_user_repos(username, token, etag, params)`: Fetches user repositories with pagination and ETag validation.
+    - `_stats_process(username, repos, recent_count, headers)`: Gathers language bytes per repo and calculates 90-day untouched state.
+    - `_lang_stats(repos_stats)`: Computes individual language percentages of total code bytes across the top repos.
+    - `get_payload(username, recent_count, token)`: Master pipeline returning `{repos, stats, lang_stats, rate_limits}`.
+    - `summary_generator(information)`: Builds the summary dictionary and writes `summary_<user>.json`.
 
 - The `utitiles` will hold code for things like logger, input validation function.
 
