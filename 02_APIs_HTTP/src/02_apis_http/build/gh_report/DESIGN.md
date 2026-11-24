@@ -39,56 +39,62 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 
 ## States and transitions (diagram or table)
 
+```text
+[Start: main.py]
+       │
+       ▼
+[CLI / Prompt Input (cli.py)]
+   ├─► TaskType.EXIT  ──► [Clean Exit]
+   ├─► TaskType.TOKEN ──► [establish_env_token() in main.py]
+   └─► TaskType.INFORMATION
+              │
+              ▼
+       [Load Token (paths.py / data/.env)]
+              │
+              ▼
+       [get_payload() in processing.py]
+              │
+              ├─► [_rate_limits(): fetch /rate_limit]
+              │
+              ├─► [_user_repos(): fetch /users/{username}/repos]
+              │      └─► Page 1 ETag validation (If-None-Match)
+              │      └─► 304 Not Modified: Reuse cached repos
+              │      └─► 200 OK: Pagination loop following Link: rel="next"
+              │
+              ├─► [_stats_process(): for top N recent repos]
+              │      └─► fetch /repos/{owner}/{repo}/languages
+              │      └─► Check 90+ days untouched
+              │
+              └─► [_lang_stats(): aggregate % of total bytes]
+              │
+              ▼
+       [Cache Update (cache.py)]
+              └─► Atomic write via .tmp & .backup to data/cache/
+                     ├─► repos.json
+                     ├─► stats.json
+                     └─► lang_stats.json
+```
+
 ## Modules and interfaces (who calls whom, with what data)
 - For API details [Read API Reference](/02_APIs_HTTP/ai_nd_report/GITHUB_API_REFERENCE.md)
 
-- We will have the following files:
-    - `main.py`
-    - `cli.py` (name requires work)
-    - `processing.py`
-    - `cache.py`
-    - `utilis.py`
+- **Package Architecture (`src/gh/`):**
+    - `paths.py`: Anchors all paths (`log_file`, `env_path`, `cache_dir`, `cache_files`) to project root `gh_report/data/` using `Path(__file__).resolve()`.
+    - `utilis.py`: Logging (`setup_logging`, `get_logger`), `TaskType` enum, CLI validators (`int_valid`, `path_valid`), and `api_failure_handler`.
+    - `cli.py`: Parses CLI flags (`-i`, `-n`, `-t`) via `argparse` or prompts interactively via `_prompt_input()`.
+    - `processing.py`: Resilient HTTP client (`_fetch()`), pagination, repo stats calculation, language percentage aggregation, and rate limit inspection.
+    - `cache.py`: Manages reading and atomic disk caching with backups (`.tmp` -> `.backup` -> active `.json`).
+    - `main.py`: Entrypoint orchestrating CLI input, environment token configuration, and payload generation.
 
-- The `main` file will how the `GitHub Token` and will pass it to `processing` functions.
-
-- Any data returning from `cli.py` must be valid data type.
-
-- The `argprase` will be established in `cli.py`
-
-- The `cli` will have 2 main input functions. All of them will return a python `dictionary`.  
-    The main are:
-    - `args_input` which will process the inputs that are received by CLI. If it returns an empty dict, then we call the next function.
-    - `prompt_input` it will simply prompt the user to select what task he/she wants, then take input for the action. Here, the `exit` option will be shown.
-
-- The `cli` file will contain the 4 displaying function. They will return nothing, but will take he processed data which can be used directly to print the table.
-    - `display_public_repo_table`
-    - `display_stats_table`
-    - `display_lang_stat_table`
-    - `display_rate_limit`
-
-- The `processing` file will have all the functions that will call the API and process its output. The `fetch_json` function will be here, and its architecture will be updated to: 
-    ```python
-    def fetch(
-        url: str,
-        params: dict | None = None,
-        headers: dict | None = None,
-    ) -> dict:
-
-        max_retries: int = 3
-        timeout: float = 5.0
-        ...
-    ```
-    And it will return something like:
-    ```python
-    return {
-        "status code": resp.status_code,
-        "error": err,
-        "header": resp.headers,
-        "data": data,
-    }
-    ```
-
-> Side Note: The `fetcher_core.py` will be renamed to `processing.py` and the function will be renamed to `fetch`.
+- **Data Flow:**
+    1. `main.py` invokes `cli.cli_input()`, returning `{"todo": TaskType, ...}`.
+    2. If `TaskType.TOKEN`: `establish_env_token()` safely copies the provided `.env` to `gh_report/data/.env`.
+    3. If `TaskType.INFORMATION`: `main.py` calls `processing.get_payload(username, recent_count, token)`.
+    4. `processing._fetch()` executes HTTP requests with a 5.0s timeout and exponential backoff retry on transient errors (ConnectionError, Timeout).
+    5. `_user_repos()` checks Page 1 `ETag`. If 304, reuses disk cache; if 200, iterates over all pages using `params["page"] += 1` while `rel="next"` is in the `Link` header.
+    6. `_stats_process()` requests `/languages` for the top $N$ recent repos and computes `untouched` status (`pushed_at >= 90 days`).
+    7. `_lang_stats()` aggregates bytes across all returned languages and computes individual percentages of total bytes.
+    8. `cache.update_cache()` writes `repos.json`, `stats.json`, and `lang_stats.json` atomically with backups.
 
 - The `processing` will have 3 functions. Each of them will have their own URL, parameters, and headers which they will send to `fetch`. But the `GitHub Token` will be `global`. 
     ```python
