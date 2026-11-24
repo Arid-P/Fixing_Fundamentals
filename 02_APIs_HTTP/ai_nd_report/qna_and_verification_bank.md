@@ -192,3 +192,32 @@ This bank records all atomic verification statements, learner verbatim responses
 - **Atoms cleared:** M02.07 (part 2 fully cleared), M02.13, M02.14, M02.15.
 
 
+
+---
+
+## Checkpoint M2-7 Verification (Final Capstone & Request Lifecycle: DNS -> TCP -> TLS -> HTTP)
+**Date:** 2026-11-24
+
+### Statements
+1. DNS resolution uses UDP by default to query port 53 and convert a human-readable hostname into an IP address before any TCP connection can be initiated.
+2. The TCP three-way handshake (SYN -> SYN-ACK -> ACK) happens *after* the TLS handshake has already encrypted the channel.
+3. In the sequence of an HTTPS request, DNS resolution occurs first to find the IP, then the TCP handshake establishes the raw connection, then TLS encrypts that connection, and only then is the HTTP request transmitted.
+4. Because HTTPS encrypts the traffic, the domain/hostname (`api.github.com`) is completely hidden from your Internet Service Provider (ISP) during the initial DNS lookup.
+5. Once the TLS session keys are established, the raw plaintext HTTP request line, headers, and body are transmitted inside TLS records, making them invisible to network sniffers on the wire.
+6. A TCP socket is uniquely identified by the combination of four values: Source IP, Source Port, Destination IP, and Destination Port.
+7. When you type `https://api.github.com/users` in a browser or Python script, the path `/users` is sent to the DNS server so it knows which server handle to return.
+
+### Learner Response (Verbatim)
+`1. T, 2. F, 3. T, 4. F, 5. T, 6. T, 7. F`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: True | Key: True — DNS uses UDP port 53 by default for fast, low-overhead lookup)
+- **Statement 2:** Correct (Answered: False | Key: False — TCP 3-way handshake MUST establish the transport connection before TLS can begin)
+- **Statement 3:** Correct (Answered: True | Key: True — The strict order is: DNS -> TCP -> TLS -> HTTP)
+- **Statement 4:** Correct (Answered: False | Key: False — Standard DNS queries are unencrypted and reveal the requested hostname directly to the ISP)
+- **Statement 5:** Correct (Answered: True | Key: True — HTTP text is wrapped inside encrypted TLS records)
+- **Statement 6:** Correct (Answered: True | Key: True — 4-tuple: src IP, src Port, dest IP, dest Port uniquely defines a TCP socket)
+- **Statement 7:** Correct (Answered: False | Key: False — DNS only resolves the hostname; paths and query parameters are strictly HTTP-layer and never seen by DNS)
+
+**Score:** 7 / 7 Correct (100%).
+- **Atoms cleared:** M02.20 (Formal verification passed). Milestone 02 atoms: 20 of 21 cleared.
