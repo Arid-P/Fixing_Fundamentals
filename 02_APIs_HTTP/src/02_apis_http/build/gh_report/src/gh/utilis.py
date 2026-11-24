@@ -6,8 +6,6 @@ from sys import exit
 from enum import Enum, auto
 from typing import Any
 
-from icecream import ic
-
 from paths import log_file
 
 

@@ -1,16 +1,13 @@
 from datetime import datetime as dt
 import logging
-from sys import exit
 from typing import Any
 from pathlib import Path
 from json import load, dump
 from os import replace
 from shutil import copy
 
-from icecream import ic
-
 from utilis import get_logger
-from paths import cache_files
+from paths import cache_files, get_summary_path
 
 logger: logging.Logger = get_logger(__name__)
 
@@ -81,7 +78,7 @@ def update_cache(agg_data: dict[str, dict[str, Any]]):
 
     for file in cache_files:
         name = file.name.split(".")[0]
-        cache_data: dict[str, Any] = agg_data[name] if isinstance(agg_data[name], dict) else {"stats": agg_data[name]}
+        cache_data: dict[str, Any] = agg_data[name]
         cache_data["time"] = dt.now()
 
         written: bool = _write_update_cache_data(file=file, cache_data=cache_data)
@@ -92,3 +89,21 @@ def update_cache(agg_data: dict[str, dict[str, Any]]):
         return False
 
     return True
+
+
+def save_summary(summary: dict[str, Any]) -> bool:
+    logger.info("Wrting summary")
+    try:
+        summary_file = get_summary_path(summary["user"])
+        logger.debug("The fiel path: %s", summary_file)
+
+        with open(summary_file, "w") as fh:
+            dump(summary, fh, indent=4, default=str)
+
+        logger.info("Successfully wrote the summary")
+        return True
+    
+    except Exception as e:
+        logger.info("Error occured while writing summary")
+        logger.error("The error: %s", exc_info=True)
+        return False

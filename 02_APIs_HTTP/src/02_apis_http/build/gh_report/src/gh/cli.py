@@ -1,17 +1,18 @@
 import logging
 import argparse
-import argparse
 from pathlib import Path
 from typing import Any
-
-from icecream import ic  # To debug
-
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 from utilis import get_logger
 from utilis import TaskType, int_valid, path_valid
 
 logger: logging.Logger = get_logger(__name__)
+console = Console()
 
 
+# Input fucntions
 def _parsering_cli_input() -> argparse.Namespace:
     logger.debug("Establishing CLI parser")
 
@@ -121,3 +122,98 @@ def cli_input() -> dict[str, TaskType | str | int | Path | None]:
         load = {"todo": TaskType.INFORMATION, "user": username, "count": recent_count}
 
     return load
+
+
+# Output functions
+def _display_public_repo_table(repos: list[dict[str, str | bool | int]]) -> None:
+    table = Table(title="Public Repositres", header_style="bold cyan")
+
+    table.add_column("S.No.", style="dim", justify="right")
+    table.add_column("Name", style="bold white", justify="left")
+    table.add_column("Stars", style="yellow", justify="right")
+    table.add_column("Last Pushed", justify="center", style="green")
+    table.add_column("Forked?", style="white", justify="center")
+
+    for i, vals in enumerate(repos, 1):
+        table.add_row(
+            f"{i}",
+            f"{vals["name"]}",
+            f"{vals["stars"]}",
+            f"{vals["pushed"]}",
+            f"{vals["forked"]}",
+        )
+
+    console.print(table)
+
+
+def _display_stats_table(stats: list[dict[str, str | bool | int]]) -> None:
+    table = Table(title="Oeral Stats of Repositres", header_style="bold cyan")
+
+    table.add_column("S.No.", style="dim", justify="right")
+    table.add_column("Name", style="bold white", justify="left")
+    table.add_column("Stars", style="yellow", justify="right")
+    table.add_column("Language", style="green", justify="center")
+    table.add_column("Untouched", style="white", justify="center")
+
+    for i, vals in enumerate(stats, 1):
+        table.add_row(
+            f"{i}",
+            f"{vals["name"]}",
+            f"{vals["stars"]}",
+            f"{vals["language"]}",
+            f"{vals["untouched"]}",
+        )
+
+    console.print(table)
+
+
+def _display_lang_stat_table(lang_stats: dict[str, float]) -> None:
+    table = Table(title="Language Stats of Repositres", header_style="bold cyan")
+
+    table.add_column("S.No.", style="dim", justify="right")
+    table.add_column("Language", style="bold white", justify="left")
+    table.add_column("% of Total Bytes", style="yellow", justify="right")
+
+    for i, (lang, percent) in enumerate(lang_stats.items(), 1):
+        table.add_row(
+            f"{i}",
+            f"{lang}",
+            f"{percent:.2f}",
+        )
+
+    console.print(table)
+
+
+def _display_rate_limit(rate_limits: dict[str, str]) -> None:
+    content = (
+        f"[bold]Total Rate Limit:[/bold]        [cyan]{rate_limits.get('total', 'N/A')}[/cyan]\n"
+        f"[bold]Rate Limit Used:[/bold]         [yellow]{rate_limits.get('totlal left', 'N/A')}[/yellow]\n"
+        f"[bold]Time Left Till Reset:[/bold]     [green]{rate_limits.get('time left', 'N/A')}[/green]"
+    )
+
+    panel = Panel(
+        content,
+        title="[bold]GitHub Rate Limit Status[/bold]",
+        border_style="cyan",
+        padding=(1, 2),  # (top/bottom, left/right)
+    )
+    console.print(panel)
+
+
+def cli_output(information: dict[str, dict[str, Any]]) -> None:
+    repos = information["repos"]["response"]
+    stats = information["stats"]["stats"]
+    lang_stats = information["lang_stats"]["languages"]
+    rate_limits = information["rate_limits"]
+
+    functions = {
+        _display_public_repo_table: repos,
+        _display_stats_table: stats,
+        _display_lang_stat_table: lang_stats,
+        _display_rate_limit: rate_limits,
+    }
+
+    for func, args in functions.items():
+        func(args)
+
+    print("Thankls for using this program.")

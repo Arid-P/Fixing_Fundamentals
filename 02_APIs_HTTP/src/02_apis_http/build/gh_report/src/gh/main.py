@@ -6,11 +6,9 @@ from dotenv import load_dotenv
 from shutil import copy
 from pathlib import Path
 
-from icecream import ic  # To debug
-
-from cli import cli_input
-from processing import get_payload
 from paths import env_path
+from cli import cli_input, cli_output
+from processing import get_payload, user_summary
 from utilis import TaskType, setup_logging, get_logger
 
 logger: logging.Logger = get_logger(__name__)
@@ -93,7 +91,11 @@ def main() -> None:
         recent_count: int = load["count"]  # type: ignore
         token: str | None = load_token(path=env_path, name="processing")
 
-        ic(get_payload(username=username, recent_count=recent_count, token=token))
+        information: dict[str, dict[str, Any]] = get_payload(
+            username=username, recent_count=recent_count, token=token
+        )
+        user_summary(username=username, information=information)
+        cli_output(information=information)
 
 
 if __name__ == "__main__":

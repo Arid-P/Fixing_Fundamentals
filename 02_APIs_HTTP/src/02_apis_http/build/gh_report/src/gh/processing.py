@@ -8,7 +8,7 @@ from datetime import datetime as dt, timezone
 from icecream import ic
 
 from utilis import get_logger, api_failure_handler
-from cache import get_cached_repos, get_cached_repos_stats, update_cache
+from cache import get_cached_repos, get_cached_repos_stats, update_cache, save_summary
 
 logger: logging.Logger = get_logger(__name__)
 
@@ -82,7 +82,7 @@ def _rate_limits(headers: dict[str, str]) -> dict[str, str]:
     if error:
         logger.info("Some error in rate limti calulation")
         logger.debug("The payload: %s", payload)
-        ic(payload)
+
         print("Some internal error has occured")
 
     time_diff = (dt.fromtimestamp(float(payload["headers"].get("X-RateLimit-Reset"))) - dt.now()).seconds  # type: ignore
@@ -103,10 +103,10 @@ def _rate_limits(headers: dict[str, str]) -> dict[str, str]:
     ]
 
     return {
-        "rate-limit": f"Rate Limit: {payload["headers"].get("X-RateLimit-Limit")} ;",
-        "rl-left": f"Rate Limit Rmaining: {payload["headers"].get("X-RateLimit-Remaining")} ;",
+        "total": payload["headers"].get("X-RateLimit-Limit"),
+        "amount left": payload["headers"].get("X-RateLimit-Remaining"),
+        "time left": "".join(times),
         "rl-reset": f"Rate Limit Reset: {payload["headers"].get("X-RateLimit-Reset")} ;",
-        "rl-rest-time": f"Reset time in dateime: {''.join(times)}",
     }
 
 
@@ -117,7 +117,7 @@ def _process_lang(langs: dict[str, int]):
     for key, val in langs.items():
         uf_langs.append((key, int(val) / total * 100))
 
-    return dict(sorted(uf_langs, key=lambda el: el[1]))
+    return dict(sorted(uf_langs, key=lambda el: -el[1]))
 
 
 def _stats_repo(
@@ -148,7 +148,7 @@ def _stats_repo(
         )
 
         logger.info("Got the api payload back")
-        logger.debug("The payload's data: %s", api_payload["data"])
+        logger.debug("The payload's data: %s", api_payload)
 
         if error:
             logger.info("Exiting the program. (Check the apifailure_handler function)")
@@ -167,7 +167,6 @@ def _stats_repo(
                 }
             )
         else:
-            ic(api_payload, lang)
             stats_payload.append(
                 {
                     "name": repo["name"],
@@ -241,7 +240,9 @@ def _user_repos(username: str, headers: dict[str, str]) -> dict[str, Any]:
     return repo_payload
 
 
-def get_payload(username: str, recent_count: int, token: str | None):
+def get_payload(
+    username: str, recent_count: int, token: str | None
+) -> dict[str, dict[str, Any]]:
     cache_repo: dict[str, Any] = get_cached_repos()
 
     headers: dict[str, str] = {
@@ -272,15 +273,13 @@ def get_payload(username: str, recent_count: int, token: str | None):
             recent_count=recent_count,
             headers=headers,
         )
-        ic(stats_repo)
-        ic(languages)
 
-        lang_stats = _process_lang(languages)
-        ic(lang_stats)
+        lang_stats: dict[str, float] = _process_lang(languages)
+
         output_data = {
             "repos": all_repos,
-            "stats": stats_repo,
-            "lang_stats": lang_stats,
+            "stats": {"stats": stats_repo},
+            "lang_stats": {"languages": lang_stats},
         }
 
         ci = 0
@@ -295,10 +294,46 @@ def get_payload(username: str, recent_count: int, token: str | None):
     return output_data
 
 
+def user_summary(username: str, information: dict[str, dict[str, Any]]) -> None:
+    summary = {
+        "user": username,
+        "generated_at": dt.now(timezone.utc),
+        "total_repos": len(information["repos"]["response"]),
+        "total_stars": len(
+            list(filter(lambda x: (x["stars"] > 0), information["repos"]["response"]))
+        ),
+        "untouched_repos_90_days": list(
+            map(
+                lambda stat: stat["name"],
+                filter(lambda x: x["untouched"], information["stats"]["stats"]),
+            )
+        ),
+        "top_languages": dict(
+            sorted(
+                information["lang_stats"]["languages"].items(),
+                key=lambda item: -item[1],
+            )[:5]
+        ),
+        "rate_limit_remaining": information["rate_limits"]["amount left"],
+    }
+    ic(summary)
+
+    tr = 0
+    while tr < 3:
+        logger.info("Try %s: Wrting the summary", tr)
+        status = save_summary(summary=summary)
+        if status:
+            break
+    else:
+        logger.info("Could nto wrtin gthe user summary")
+
+    return
+
+
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
-    ic(get_payload("Arid-P", 10, None))
-    ic(_fetch("https://httpbin.org/status/200"))
+    print(get_payload("Arid-P", 10, None))
+    print(_fetch("https://httpbin.org/status/200"))
 
 
 if __name__ == "__main__":

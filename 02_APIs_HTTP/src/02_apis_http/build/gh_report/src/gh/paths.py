@@ -1,5 +1,4 @@
 from pathlib import Path
-from icecream import ic
 
 # roots
 root = Path(__file__).parent.parent.parent
@@ -9,7 +8,6 @@ data = root / "data"
 log_file: Path = data / "logs" / "app.log"
 log_file.parent.mkdir(parents=True, exist_ok=True)
 log_file.touch()
-ic(log_file)
 
 # env file
 env_path = data / ".env"
@@ -26,3 +24,11 @@ cache_files = [
 ]
 for file in cache_files:
     file.touch()
+
+
+# summary file
+def get_summary_path(username: str) -> Path:
+    summary_file = data / "output" / f"summary_{username}.json"
+    summary_file.parent.mkdir(parents=True, exist_ok=True)
+
+    return summary_file
