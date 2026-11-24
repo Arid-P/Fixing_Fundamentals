@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-from icecream import ic
 
 from fetcher_core import fetch_json
 
@@ -11,7 +10,6 @@ url = "https://api.github.com/user"
 headers = {"User-Agent": "Auth-Demo"}
 if token is not None:
     headers["Authorization"] = f"Bearer {token}"
-ic(headers)
 payload = fetch_json(url=url, headers=headers)
 
 

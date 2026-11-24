@@ -221,3 +221,61 @@ This bank records all atomic verification statements, learner verbatim responses
 
 **Score:** 7 / 7 Correct (100%).
 - **Atoms cleared:** M02.20 (Formal verification passed). Milestone 02 atoms: 20 of 21 cleared.
+
+---
+
+## Checkpoint M2-8 Verification: Security Hardening (S-Gate)
+**Date:** 2026-11-24
+
+### Statements
+1. Setting file mode to `chmod 600` ensures that other standard user accounts on the same Linux operating system cannot read or write the contents of that file.
+2. Setting `verbose=False` completely prevents all log messages from ever being written to `data/logs/app.log`, regardless of whether `logger.info()` or `logger.error()` is called.
+3. Passing sensitive authentication tokens directly into `logger.debug()` is safe in production environments because Python's `logging` module automatically detects and masks tokens that start with `ghp_` or `Bearer`.
+4. Removing an `ic()` print statement in the code prevents variables from being printed to the terminal, but `icecream` still writes the values into `app.log` by default in the background.
+5. If a developer uses `.gitignore` to ignore `.env`, committing a script that calls `logger.info(f"Connecting with {token}")` will still leak the secret if log files or terminal output are shared or committed.
+6. When reading a personal access token from an environment file using `python-dotenv`, the token value is injected into the program process's memory (`os.environ`), but it is not automatically broadcast over the network until attached to an HTTP header or payload.
+7. Deleting a compromised GitHub personal access token from a local `.env` file automatically revokes that token on GitHub's authentication servers so it can no longer be used by third parties.
+
+### Learner Response (Verbatim)
+`t, f, f, f, t, t, f`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: True | Key: True — `600` grants read/write to the owner only; group and others have zero permissions `---`)
+- **Statement 2:** Correct (Answered: False | Key: False — `verbose=False` sets log level to `INFO`, so `INFO`, `WARNING`, `ERROR`, `CRITICAL` still get logged; only `DEBUG` is omitted)
+- **Statement 3:** Correct (Answered: False | Key: False — Python standard library `logging` does not auto-mask tokens; it logs exact formatted strings)
+- **Statement 4:** Correct (Answered: False | Key: False — `icecream` prints to stderr by default and does not secretly write to `app.log`)
+- **Statement 5:** Correct (Answered: True | Key: True — Leaking tokens into logs or stdout compromises them even if `.env` is ignored by git)
+- **Statement 6:** Correct (Answered: True | Key: True — Loading into environment variables only sets local process memory)
+- **Statement 7:** Correct (Answered: False | Key: False — A token must be revoked or regenerated on GitHub's security settings to invalidate it server-side)
+
+**Score:** 7 / 7 Correct (100%).
+- **Status:** Security Hardening Gate passed.
+
+---
+
+## Checkpoint M2-8 Verification: Correctness Hardening (C-Gate)
+**Date:** 2026-11-24
+
+### Statements
+1. Setting `per_page=100` on the GitHub `/users/{username}/repos` endpoint guarantees that a user with 150 repositories will receive all 150 repositories in a single HTTP response.
+2. In Python, a default parameter defined as `payload: dict = {"cache": False}` is instantiated once at function definition time, meaning mutations to `payload` persist across subsequent calls where the caller does not supply that argument.
+3. Calculating the total stars of a user by taking `len([repo for repo in repos if repo['stars'] > 0])` yields the exact same numerical result as summing the stargazers count across all repositories, provided every repository has at least one star.
+4. When performing an integer modulo operation `time_diff %= 60`, the resulting value is mathematically guaranteed to be strictly in the range `0` to `59` (for non-negative integers).
+5. A retry `while` loop with condition `while count < 3:` that performs a failing operation without incrementing `count` inside the loop body will continue executing indefinitely, consuming CPU cycles and freezing program exit.
+6. HTTP status code `503 Service Unavailable` returned by an API server means that the client has sent too many requests in a given time window and must wait for `X-RateLimit-Reset`.
+7. An API client that encounters an HTTP `404 Not Found` when requesting `/users/{username}/repos` can reliably conclude that the target user does not exist (or has no public presence), and should abort downstream reporting workflows rather than generating an empty success summary.
+
+### Learner Response (Verbatim)
+`f (in 2 payloads: 100 + 50), t, f, t, t, f, t`
+
+### Evaluation
+- **Statement 1:** Correct (Answered: False | Key: False — GitHub caps `per_page` at 100 maximum; 150 repos requires following pagination over 2 pages: 100 + 50)
+- **Statement 2:** Correct (Answered: True | Key: True — Mutable defaults are created once at definition time and shared across invocations)
+- **Statement 3:** Correct (Answered: False | Key: False — Even if every repo has stars, a repo with 5 stars adds 5 to the sum, but only 1 to the count)
+- **Statement 4:** Correct (Answered: True | Key: True — Modulo 60 of any positive integer produces a remainder between 0 and 59)
+- **Statement 5:** Correct (Answered: True | Key: True — Without incrementing the retry counter, the exit condition is never satisfied)
+- **Statement 6:** Correct (Answered: False | Key: False — 503 is server error / temporary unavailability, whereas rate limits return 429 or 403)
+- **Statement 7:** Correct (Answered: True | Key: True — A 404 indicates non-existence and downstream persistence should be aborted)
+
+**Score:** 7 / 7 Correct (100%).
+- **Status:** Correctness Hardening Gate passed.

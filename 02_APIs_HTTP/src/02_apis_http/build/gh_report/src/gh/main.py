@@ -63,7 +63,7 @@ def establish_env_token(source_file: Path, env_path: Path, tries: int = 1) -> No
 
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
-    setup_logging(verbose=True)
+    setup_logging(verbose=False)
     logger.info("Estabished looging")
 
     token = load_token(env_path, "processing.py testing")

@@ -5,7 +5,7 @@ from pathlib import Path
 from sys import exit
 from enum import Enum, auto
 from typing import Any
-
+from datetime import datetime as dt
 from paths import log_file
 
 
@@ -36,8 +36,11 @@ logger = get_logger(__file__)
 
 
 def api_failure_handler(
-    api_payload: dict[str, Any], payload: dict[str, Any] = {"cache": False}
+    api_payload: dict[str, Any], payload: dict[str, Any] | None = None
 ) -> tuple[dict[str, Any], bool]:
+    if payload is None:
+        payload = {"cache": False}
+
     # faliure cases
     if api_payload["status code"] == 304:
         logger.info(
@@ -62,20 +65,30 @@ def api_failure_handler(
             )
             print("Invalid GITHUB_TOKEN provided in .env.")
         elif api_payload["status code"] == 404:
-            name = api_payload["request"].url.split('/')[4]
+            name = api_payload["request"].url.split("/")[4]
             logger.info(
                 "HTTPERROR has occured. Username provided does not exist. status code: %s",
                 api_payload["status code"],
             )
-            print(
-                f"Error: User '{name}' does not exist on GitHub."
-            )
-        else:
+            print(f"Error: User '{name}' does not exist on GitHub.")
+        elif api_payload["status code"] in {429, 403}:
             logger.info(
                 "HTTPERROR has occured. Rate Limit exceeded. status code: %s",
                 api_payload["status code"],
             )
-            print("Rate limit exceeded.")
+            reset_ts = api_payload["headers"].get("X-RateLimit-Reset")
+            if reset_ts:
+                reset_local = dt.fromtimestamp(float(reset_ts)).strftime('%Y-%m-%d %H:%M:%S')
+                exit(f"Rate limit exceeded. Resets at {reset_local} local time.")
+            else:
+                exit("Rate limit exceeded.")
+        elif api_payload["status code"] >= 500:
+            logger.info(
+                "ServerError has occured. Rate Limit exceeded. status code: %s",
+                api_payload["status code"],
+            )
+            print(f"GitHub API server error ({api_payload["status code"]}).")
+            pass
 
         logger.debug("The error: %s", api_payload["error"])
         payload["cache"] = True

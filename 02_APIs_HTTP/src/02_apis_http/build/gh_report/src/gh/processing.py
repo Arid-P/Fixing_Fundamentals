@@ -92,7 +92,7 @@ def _rate_limits(headers: dict[str, str]) -> dict[str, str]:
     hours = int(time_diff / (60 * 60))
     time_diff %= 60 * 60
     mins = int(time_diff / 60)
-    time_diff = 60
+    time_diff %= 60
     sec = int(time_diff)
 
     times = [
@@ -140,7 +140,6 @@ def _stats_repo(
         url: str = f"https://api.github.com/repos/{username}/{repo["name"]}/languages"
 
         logger.debug("The api url: %s", url)
-        logger.debug("The headers for api call: %s", headers)
 
         api_payload = _fetch(url=url, headers=headers)
         _, error = api_failure_handler(
@@ -154,7 +153,7 @@ def _stats_repo(
             logger.info("Exiting the program. (Check the apifailure_handler function)")
             exit("Some error has occured internally")
 
-        untouched = (now - repo["pushed"]).days > 30
+        untouched = (now - repo["pushed"]).days > 90
 
         lang = api_payload["data"]
         if len(lang) <= 0:
@@ -197,14 +196,13 @@ def _user_repos(username: str, headers: dict[str, str]) -> dict[str, Any]:
 
     url: str = f"https://api.github.com/users/{username}/repos"
     params: dict[str, Any] = {
-        "per_page": 2,
+        "per_page": 100,
         "sort": "pushed",
         "direction": "desc",
         "page": 1,
     }
 
     logger.debug("The api url: %s", url)
-    logger.debug("The headers for api call: %s", headers)
 
     first = True
     while True:
@@ -264,13 +262,17 @@ def get_payload(
     all_repos: dict[str, Any] = _user_repos(username=username, headers=headers)
 
     if all_repos["cache"]:  # when cache is needed
-        if cache_repo and cache_repo["user"] == username:
+        if len(cache_repo) <= len(all_repos):
+            # Cache is missing field, ie, is incomplete
+            exit("Cache is not available and data could be retrieved through API")
+        elif cache_repo["user"] == username:
             cache_stat: dict[str, dict[str, Any]] = get_cached_repos_stats()
             output_data = {
                 "repos": cache_repo,
                 "stats": cache_stat["stats"],
                 "lang_stats": cache_stat["lang_stats"],
             }
+            output_data["rate_limits"] = {}
         else:
             exit(f"User not found. No user exists with the name: {username}")
 
@@ -294,10 +296,12 @@ def get_payload(
         while ci < 3:
             if update_cache(output_data):
                 break
+            ci += 1
         else:
+            logger.info("Caching the data failed several time, and was not possible")
             print("Could not cache the data")
 
-    output_data["rate_limits"] = _rate_limits(headers=headers)
+        output_data["rate_limits"] = _rate_limits(headers=headers)
 
     return output_data
 
@@ -307,8 +311,8 @@ def user_summary(username: str, information: dict[str, dict[str, Any]]) -> None:
         "user": username,
         "generated_at": dt.now(timezone.utc),
         "total_repos": len(information["repos"]["response"]),
-        "total_stars": len(
-            list(filter(lambda x: (x["stars"] > 0), information["repos"]["response"]))
+        "total_stars": sum(
+            [int(repo["stars"]) for repo in information["repos"]["response"]]
         ),
         "untouched_repos_90_days": list(
             map(
@@ -322,9 +326,11 @@ def user_summary(username: str, information: dict[str, dict[str, Any]]) -> None:
                 key=lambda item: -item[1],
             )[:5]
         ),
-        "rate_limit_remaining": information["rate_limits"]["amount left"],
+        "rate_limit_remaining": (
+            information["rate_limits"]["amount left"]
+            if information["rate_limits"] else "Cached used"
+        ),
     }
-    ic(summary)
 
     tr = 0
     while tr < 3:
@@ -332,6 +338,7 @@ def user_summary(username: str, information: dict[str, dict[str, Any]]) -> None:
         status = save_summary(summary=summary)
         if status:
             break
+        tr += 1
     else:
         logger.info("Could nto wrtin gthe user summary")
 
@@ -340,6 +347,12 @@ def user_summary(username: str, information: dict[str, dict[str, Any]]) -> None:
 
 def main() -> None:
     """It is the starting function. From it you can understand a basic flow of the whole program"""
+    headers: dict[str, str] = {
+        "User-Agent": "GH-Activity",
+        "Accept": "application/vnd.github+json",
+    }
+
+    ic(_rate_limits(headers=headers))
     print(get_payload("Arid-P", 10, None))
     print(_fetch("https://httpbin.org/status/200"))
 

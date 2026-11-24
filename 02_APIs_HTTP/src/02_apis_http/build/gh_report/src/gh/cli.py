@@ -185,6 +185,10 @@ def _display_lang_stat_table(lang_stats: dict[str, float]) -> None:
 
 
 def _display_rate_limit(rate_limits: dict[str, str]) -> None:
+    if len(rate_limits) <= 3:
+        print("Using cached data, so no rate limit checked")
+        return
+
     content = (
         f"[bold]Total Rate Limit:[/bold]        [cyan]{rate_limits.get('total', 'N/A')}[/cyan]\n"
         f"[bold]Rate Limit Used:[/bold]         [yellow]{rate_limits.get('totlal left', 'N/A')}[/yellow]\n"
