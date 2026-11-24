@@ -9,6 +9,7 @@ from pathlib import Path
 from icecream import ic  # To debug
 
 from cli import cli_input
+from processing import get_payload
 from paths import env_path
 from utilis import TaskType, setup_logging, get_logger
 
@@ -68,6 +69,8 @@ def main() -> None:
     setup_logging(verbose=True)
     logger.info("Estabished looging")
 
+    token = load_token(env_path, "processing.py testing")
+
     load: dict[str, TaskType | str | int | Path | None] = cli_input()
 
     if load["todo"] is TaskType.EXIT:
@@ -87,8 +90,10 @@ def main() -> None:
         logger.info("User wants infromation")
 
         username: str = load["user"]  # type: ignore
-        recent_count: int | None = load["count"]  # type: ignore
+        recent_count: int = load["count"]  # type: ignore
         token: str | None = load_token(path=env_path, name="processing")
+
+        ic(get_payload(username=username, recent_count=recent_count, token=token))
 
 
 if __name__ == "__main__":

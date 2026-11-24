@@ -1,11 +1,28 @@
 from pathlib import Path
 from icecream import ic
 
+# roots
+root = Path(__file__).parent.parent.parent
+data = root / "data"
+
 # logs
-log_file: Path = Path(__file__).parent.parent.parent / "data" / "logs" / "app.log"
+log_file: Path = data / "logs" / "app.log"
 log_file.parent.mkdir(parents=True, exist_ok=True)
 log_file.touch()
 ic(log_file)
 
-env_path = Path(__file__).resolve().parent.parent.parent / "data" / ".env"
+# env file
+env_path = data / ".env"
 env_path.parent.mkdir(parents=True, exist_ok=True)
+
+# cache directory and files
+cache_dir = data / "cache"
+cache_dir.mkdir(parents=True, exist_ok=True)
+
+cache_files = [
+    cache_dir / "repos.json",
+    cache_dir / "stats.json",
+    cache_dir / "lang_stats.json",
+]
+for file in cache_files:
+    file.touch()

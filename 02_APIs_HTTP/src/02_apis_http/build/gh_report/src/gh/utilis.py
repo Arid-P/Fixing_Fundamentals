@@ -1,8 +1,10 @@
 import logging
+import requests
 from typing import Literal
 from pathlib import Path
 from sys import exit
 from enum import Enum, auto
+from typing import Any
 
 from icecream import ic
 
@@ -35,6 +37,58 @@ def get_logger(name: str) -> logging.Logger:
 logger = get_logger(__file__)
 
 
+def api_failure_handler(
+    api_payload: dict[str, Any], payload: dict[str, Any]
+) -> tuple[dict[str, Any], bool]:
+    # faliure cases
+    if api_payload["status code"] == 304:
+        logger.info(
+            "Status Code 304 was returned. So no change in data, hence cache used"
+        )
+        payload["cache"] = True
+    elif isinstance(api_payload["error"], requests.Timeout) or isinstance(
+        api_payload["error"], requests.ConnectionError
+    ):
+        logger.info("Network error has occured. API could not be reached")
+        logger.debug("The error: %s", api_payload["error"])
+        print(
+            "Network error: Could not reach GitHub API. Falling back to offline cache if available."
+        )
+        payload["cache"] = True
+
+    elif isinstance(api_payload["error"], requests.HTTPError):
+        if api_payload["status code"] == 401:
+            logger.info(
+                "HTTPERROR has occured. Invalid Github Token. status code: %s",
+                api_payload["status code"],
+            )
+            print("Invalid GITHUB_TOKEN provided in .env.")
+        elif api_payload["status code"] == 404:
+            logger.info(
+                "HTTPERROR has occured. Username provided does not exist. status code: %s",
+                api_payload["status code"],
+            )
+            print(
+                f"Error: User '{api_payload["request"].url}' does not exist on GitHub."
+            )
+        else:
+            logger.info(
+                "HTTPERROR has occured. Rate Limit exceeded. status code: %s",
+                api_payload["status code"],
+            )
+            print("Rate limit exceeded.")
+
+        logger.debug("The error: %s", api_payload["error"])
+        payload["cache"] = True
+
+    elif isinstance(api_payload["error"], requests.JSONDecodeError):
+        logger.info("The Json received is not processable")
+        print("Error: Received malformed response from server")
+        payload["cache"] = True
+
+    return payload, payload["cache"]
+
+
 def int_valid(val, tries: int = 2, num_range: range | None = None) -> int:
     err_msg: str = "Some Error has occured"
 
@@ -45,7 +99,7 @@ def int_valid(val, tries: int = 2, num_range: range | None = None) -> int:
             val = int(val)
 
             if num_range is not None and val not in num_range:
-                raise ValueError
+                raise AttributeError
 
             logger.info("The value is a intger and in range")
             logger.debug("The value provided is %s", val)
@@ -60,7 +114,7 @@ def int_valid(val, tries: int = 2, num_range: range | None = None) -> int:
                 "Unforunately the value you enter is not intger.\nSo, please again enter the value: "
             )
 
-        except ValueError:
+        except AttributeError:
             logger.info("The value provied is not in range")
             err_msg = "Error: the value provided is not in range"
 

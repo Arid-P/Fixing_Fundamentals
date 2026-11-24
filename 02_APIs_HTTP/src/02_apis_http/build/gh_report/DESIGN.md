@@ -256,15 +256,15 @@ For a user with $N_{\text{repos}}$ total public repositories, requesting languag
     ```json
     {
 		"time": <datetime_object>,
-        "etag": resp['etag'],
-        "stats": {
-            <full_name>: {
+        "stats": [
+            {
+                "name": <full_name>,
                 "language": ...,
                 "stars": ...,
                 "untouched": ...
             },
             ...
-        }
+        ]
     }
     ```
 
@@ -278,7 +278,6 @@ For a user with $N_{\text{repos}}$ total public repositories, requesting languag
     ```json
     {
         "time": <datetime_object>,
-        "etag": resp['etag'],
         "stats": {
             "language": <% of total bytes>,
             ...
