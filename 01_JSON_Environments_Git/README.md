@@ -32,7 +32,7 @@
     ```python
     user_details = {'id': 1, 'name': 'Leanne Graham', 'username': 'Bret', 'email': 'Sincere@april.biz', 'address': {'street': 'Kulas Light', 'suite': 'Apt. 556', 'city': 'Gwenborough', 'zipcode': '92998-3874', 'geo': {'lat': '-37.3159', 'lng': '81.1496'}}, 'phone': '1-770-736-8031 x56442', 'website': 'hildegard.org', 'company': {'name': 'Romaguera-Crona', 'catchPhrase': 'Multi-layered client-server neural-net', 'bs': 'harness real-time e-markets'}}
 
-    with open('<file_path>/<file_name>.py' , 'w') as file:
+    with open('<file_path>/<file_name>.json' , 'w') as file:
         json.dump(user_details, file, indent=2) #dumps the user as a formatted data into the file
     ```
 
@@ -117,7 +117,7 @@ _***Use of JSON Along with CSV***_
     Then we have *Staging area*, here you add or stage the files to be commited. Say you edit 5 files, but want only 3 to be commit then you add those there to the stage area and commit them. We done update any file here, on running `git add`, git takes a snapahot of the working directory and saves it. "That is what "staged" means: *marked and prepared to be included in the next commit*.*". 
     Then you have the *Repositry* or common refered to as repo. When you run `git commit`, Git seals the packing box, gives it a unique cryptographic ID (SHA hash), and stores it permanently in the `.git` directory as a snapshot. The staging area is now clean and ready for the next round.
 
-- **`git switch ~-c~ <branch-name>`:** It is the new way to switch to a branch. The `-c` flag creates the branch if it doesnt already exist.
+- **`git switch -c <branch-name>`:** It is the new way to create and switch to a branch. The `-c` flag creates a new branch (and errors if that branch already exists).
 
 - **`git branch`:** Lists all local branches, with an asterisk `*` next to the one you are currently standing on.
 

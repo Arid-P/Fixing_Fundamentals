@@ -15,9 +15,10 @@ with one real "build" — not a toy example.
 |---|-----------|--------|---------|----------|
 | 00 | Environment & Tooling (uv) | ✅ Done | | |
 | 01 | JSON, Virtual Environments, Git Merge Conflicts | ✅ Done | | |
-| 02 | APIs & HTTP (requests, status codes, auth) | 🔲 Not started | | |
-| 03 | FastAPI + SQLAlchemy Backend (fix circular imports) | 🔲 Not started | | |
-| 04 | Frontend Basics + Deployment | 🔲 Not started | | |
+| 02 | APIs & HTTP (requests, status codes, auth) | ✅ Done | 2026-10-28 | 2026-11-24 |
+| 03 | Testing with pytest (practice first, gh_report capstone) | 🔲 Not started | | |
+| 04 | FastAPI + SQLAlchemy Backend (fix circular imports) | 🔲 Not started | | |
+| 05 | Frontend Basics + Deployment | 🔲 Not started | | |
 
 Status key: 🔲 Not started · 🟡 In progress · ✅ Done · 🔁 Revisit later
 

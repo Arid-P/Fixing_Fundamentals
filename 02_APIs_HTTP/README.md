@@ -11,7 +11,7 @@
 - Retry helper `fetcher_core.py` with exponential waiting built-in.
 - Disk-caching prototype with TTL, `weather_cache_prototype.py`.
 - Rate limit and `.env` access scripts: `dotenv_pactice.py`, `rate_limit.py`.
-- Currently working on `gh_report`.
+- Built `gh_report` (GitHub activity CLI in `src/02_apis_http/build/gh_report/`) and `auth_demo.py` (Bearer token `/user` check).
 
 ## What actually clicked
 - **What actually Happens Between your device and server:** When your browser or a Python script talks to a server, it does not "open a link". It opens a network connection (TCP socket) to a remote computer and sends plain text formatted according to the HTTP specification. The server reads that text, processes it, and streams plain text back. 
@@ -196,7 +196,7 @@
 
 - **Open-Meteo API:** We will be using this api for practice. On the page (https://open-meteo.com/en/docs#api_documentation) the api end point is `v1/forecast`, which makes the URL, `https://api.open-meteo.com/v1/forecast` to be used in get. 
     Its parameters include:
-        - `latidue` & `latitude`: These are required parameters, and should be floats.
+        - `latitude` & `longitude`: These are required parameters, and should be floats.
         - Metrics like `current`, in which we define variables whose current condition should be returned; `hourly`, variables whose hourly condition should be returned; `daily`, variables whose daily condition should be returned. These are string array. They can be common separated or use multiple `&hourly=` elements.
         - The timezone, in it, we define the UTC offset, like +5:30 for India. In the response we receive a key `utc_offset_seconds` for it.
     A successful return object: 
@@ -280,6 +280,12 @@
 
 #### System Design
 For the github activity report build go to [Desgin.md](/02_APIs_HTTP/src/02_apis_http/build/gh_report/DESIGN.md)
+
+## Design vs What I Built
+- **Token handling (`-t`):** Originally designed to empty the source `.env` after copying; changed (Decision S4) to copy to `data/.env` with `chmod 600` and leave the source `.env` untouched.
+- **Rate-limit exhaustion:** Originally designed with an interactive sleep-or-exit prompt; simplified (Decision D26) to stop immediately and display the local reset time.
+- **Output & caching:** Built 3 `rich` tables + Rate Limit panel + `data/output/summary_<user>.json` with Page-1 `ETag` / `If-None-Match` (`304`) and atomic `.tmp`/`.backup` writes.
+- **Testing:** Manual CLI acceptance runs used in M02; `pytest` with mocks deferred to M03 (`03_Testing_Pytest`).
 
 
 

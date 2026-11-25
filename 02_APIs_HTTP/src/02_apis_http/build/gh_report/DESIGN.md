@@ -10,7 +10,7 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 
 3. For `information` task, the user needs to provide two inputs: `user` and `N`. `user` is for which user's repo do we have to display in the `public repo table`. `recent_count` is the number most recent repos that the script needs to process for the `stats table`. [3 and 4 of Failure](#failure-modes-and-handling), [For Tables](#h-table-and-summary-json-layout)
 
-4. If the user provided `Github Token` flag then a path will be the input with it. The path will be for the `.env` file. We copy the .env file to the programs personal directory (like how commands are saved in a directory), and check if the copied file and the given file have the same key, if no then recopy. If yes then we empty the original file. Emptying is always last. [5 of Failure Modes and Handling](#failure-modes-and-handling)
+4. If the user provided `Github Token` flag then a path will be the input with it. The path will be for the `.env` file. We copy the .env file to the programs personal directory (`data/.env`), and check if the copied file and the given file have the same key, if no then recopy. Per Decision S4, the original source `.env` file is never emptied or wiped. [5 of Failure Modes and Handling](#failure-modes-and-handling)
 
 5. The `public repo table` will be printed by `display_public_repo_table` function. It displays all the public repos of the provided user. The layout of the table is:
     |S.No.|Name|Stars|Last Pushed|Forked?|
@@ -18,8 +18,8 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
     |1.|...|...|...|Yes|
     |2.|...|...|...|No|
 
-6. The `stats table` will be printed by `display_stats_table` function. It displays the stats of the `recent_count` most recent repos pushed. The layout is:
-    |S.No.|Full Name|Language|Stars|Untouched|
+6. The `stats table` will be printed by `_display_stats_table` function. It displays the stats of the `recent_count` most recent repos pushed. The layout is:
+    |S.No.|Name|Stars|Language|Untouched|
     |---|---|---|---|---|
     |1.|...|...|...|Yes|
     |2.|...|...|...|No|
@@ -61,11 +61,11 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
               │      └─► 304 Not Modified: Reuse cached repos
               │      └─► 200 OK: Pagination loop following Link: rel="next"
               │
-              ├─► [_stats_process(): for top N recent repos]
+              ├─► [_stats_repo(): for top N recent repos]
               │      └─► fetch /repos/{owner}/{repo}/languages
               │      └─► Check 90+ days untouched
               │
-              └─► [_lang_stats(): aggregate % of total bytes]
+              └─► [_process_lang(): aggregate % of total bytes]
               │
               ▼
        [Cache Update (cache.py)]
@@ -88,24 +88,24 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 
 - **Data Flow:**
     1. `main.py` invokes `cli.cli_input()`, returning `{"todo": TaskType, ...}`.
-    2. If `TaskType.TOKEN`: `establish_env_token()` safely copies the provided `.env` to `gh_report/data/.env`.
+    2. If `TaskType.TOKEN`: `establish_env_token()` safely copies the provided `.env` to `gh_report/data/.env` without modifying the source file.
     3. If `TaskType.INFORMATION`: `main.py` calls `processing.get_payload(username, recent_count, token)`.
-    4. `processing._fetch()` executes HTTP requests with a 5.0s timeout and exponential backoff retry on transient errors (ConnectionError, Timeout).
+    4. `processing._fetch()` executes HTTP requests with a 5.0s timeout and exponential backoff retry on transient errors (`ConnectionError`, `Timeout`, and 5xx); stops immediately on `[401, 403, 404, 429]` and `JSONDecodeError`.
     5. `_user_repos()` checks Page 1 `ETag`. If 304, reuses disk cache; if 200, iterates over all pages using `params["page"] += 1` while `rel="next"` is in the `Link` header.
-    6. `_stats_process()` requests `/languages` for the top $N$ recent repos and computes `untouched` status (`pushed_at >= 90 days`).
-    7. `_lang_stats()` aggregates bytes across all returned languages and computes individual percentages of total bytes.
+    6. `_stats_repo()` requests `/languages` for the top $N$ recent repos and computes `untouched` status (`pushed_at > 90 days`).
+    7. `_process_lang()` aggregates bytes across all returned languages and computes individual percentages of total bytes.
     8. `cache.update_cache()` writes `repos.json`, `stats.json`, and `lang_stats.json` atomically with backups.
-    9. `processing.summary_generator()` aggregates the summary metrics and saves them to `data/output/summary_<user>.json`.
+    9. `processing.user_summary()` aggregates the summary metrics and saves them to `data/output/summary_<user>.json`.
     10. `cli.cli_output()` renders styled `rich` tables and panels for all 4 sections in the terminal.
 
 - The `processing` file defines functions that manage specific API requests and data transformations:
     - `_fetch(url, params, headers)`: Core HTTP helper with 3 retries, exponential backoff, and 5.0s timeout.
-    - `_rate_limits(headers)`: Calls `/rate_limit`, returning `rate-limit`, `rl-left`, `rl-reset`, and `rl-rest-time`.
-    - `_user_repos(username, token, etag, params)`: Fetches user repositories with pagination and ETag validation.
-    - `_stats_process(username, repos, recent_count, headers)`: Gathers language bytes per repo and calculates 90-day untouched state.
-    - `_lang_stats(repos_stats)`: Computes individual language percentages of total code bytes across the top repos.
+    - `_rate_limits(headers)`: Calls `/rate_limit`, returning `total`, `amount left`, `time left`, and `rl-reset`.
+    - `_user_repos(username, headers)`: Fetches user repositories with pagination and ETag validation.
+    - `_stats_repo(username, repos, recent_count, headers)`: Gathers language bytes per repo and calculates 90-day untouched state.
+    - `_process_lang(langs)`: Computes individual language percentages of total code bytes across the top repos.
     - `get_payload(username, recent_count, token)`: Master pipeline returning `{repos, stats, lang_stats, rate_limits}`.
-    - `summary_generator(information)`: Builds the summary dictionary and writes `summary_<user>.json`.
+    - `user_summary(username, information)`: Builds the summary dictionary and writes `summary_<user>.json`.
 
 - The `utitiles` will hold code for things like logger, input validation function.
 
@@ -114,7 +114,7 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 ## Constraints (time, memory, hardware, cost)
 - Rate limits: 60 req/hr (unauthenticated) vs 5,000 req/hr (authenticated).
 - Network timeout: 5.0 seconds per request.
-- Max retries: 3 attempts with exponential back off on transient errors (connection/timeouts).
+- Max retries: 3 attempts with exponential back off on transient errors (`ConnectionError`, `Timeout`, 5xx).
 - Memory & Disk: Cache stored locally on disk under `data/cache/`
 
 ## Failure modes and handling
@@ -129,7 +129,7 @@ A CLI tool to view a user's public repos, and the report of the most recently pu
 5. **Path in -T flag is missing:** If the path is missing we give the error that no path was provided and exit the program. 
 
 ## Test plan (how I will know it works)
-We will implement `pytest` for testing. Since our codebases is based on functional programming, we will have tests for each function.
+Manual CLI acceptance runs verify live and cached runs in M02; automated `pytest` unit tests with HTTP mocks are deferred to M03 (`03_Testing_Pytest`).
 
 ---
 
@@ -150,7 +150,7 @@ We will implement `pytest` for testing. Since our codebases is based on function
 - We check the `Link` header in response headers to see if `Link` is present and if `rel="next"` is present. If `Link` is absent or `rel="next"` is not in it, the pagination loop stops.
 
 #### (c) Rate-limit policy and what the user sees
-- If the rate limit is exhausted (remaining = 0), we notify the user with the reset time in local time, and prompt whether they want the program to sleep for the remaining duration or exit cleanly.
+- Per Decision D26, if the rate limit is exhausted (remaining = 0, HTTP `403`/`429`), stop cleanly and print the reset time in local time (no interactive sleep prompt).
 
 #### (d) Cache key, what is stored (body, ETag, time), and where the file lives with the path anchored to the file
 - The `cache.py` file will manage all the functions that read or write on the cache files. In the script file's parent folder we will create `data/cache/` and store the cache files there.
@@ -205,7 +205,7 @@ For a user with $N_{\text{repos}}$ total public repositories, requesting languag
 	```	
 
 - **`stats tables`:** It is the table that lists the `recent_count` most recent repos pushed. The format is like:
-    |S.No.|Full Name|Language|Stars|Untouched|
+    |S.No.|Name|Stars|Language|Untouched|
     |---|---|---|---|---|
     |1.|...|...|...|Yes|
     |2.|...|...|...|No|
