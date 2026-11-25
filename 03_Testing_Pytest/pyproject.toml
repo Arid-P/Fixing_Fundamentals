@@ -7,7 +7,12 @@ authors = [
     { name = "Arid-P", email = "aridamanpatel.srijan@gmail.com" }
 ]
 requires-python = ">=3.15"
-dependencies = []
+dependencies = [
+    "icecream>=2.2.0",
+    "python-dotenv>=1.2.4",
+    "requests>=2.34.2",
+    "rich>=15.0.0",
+]
 
 [project.scripts]
 03-testing-pytest = "03_testing_pytest:main"
@@ -21,3 +26,10 @@ dev = [
     "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src",
+    "src/03_testing_pytest/gh_report/src/gh",
+]
+testpaths = ["tests"]
