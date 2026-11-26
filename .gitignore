@@ -11,3 +11,4 @@ __pycache__/
 Journey_Docs/
 .vscode/
 02_APIs_HTTP/response.txt
+context_harvest/
