@@ -30,6 +30,7 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = [
     "src",
+    "src/03_testing_pytest",
     "src/03_testing_pytest/gh_report/src/gh",
 ]
 testpaths = ["tests"]
